@@ -11,7 +11,7 @@ import GenerationProgress from '../components/ui/GenerationProgress'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from '../components/auth/AuthModal'
 import ProjectsSidebar from '../components/projects/ProjectsSidebar'
-import { projectsApi } from '../api/client'
+import { projectsApi, conversationApi } from '../api/client'
 
 export default function Chat() {
   const navigate = useNavigate()
@@ -356,12 +356,12 @@ function ContextPanel({
                 <p className="text-xs font-medium text-slate-400">Downloads</p>
                 <div className="space-y-2">
                   <SidebarDownloadBtn
-                    href={`http://localhost:8000/conversation/download/sql/${sessionId}`}
+                    href={conversationApi.downloadSql(sessionId)}
                     icon="📄"
                     label="Download SQL"
                   />
                   <SidebarDownloadBtn
-                    href={`http://localhost:8000/conversation/download/pdf/${sessionId}`}
+                    href={conversationApi.downloadPdf(sessionId)}
                     icon="📋"
                     label="Download PDF"
                   />
