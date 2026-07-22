@@ -1,15 +1,16 @@
 /* src/components/auth/AuthModal.jsx
-   Premium login / register modal
-   ─────────────────────────────── */
+   Glassmorphic Auth Modal for Login & Registration
+*/
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import './AuthModal.css'
 
 export default function AuthModal({ onClose }) {
   const { login, register, loading, error } = useAuth()
-  const [mode, setMode] = useState('login')   // 'login' | 'register'
+  const [mode, setMode] = useState('login')
   const [form, setForm] = useState({ email: '', displayName: '', password: '' })
+  const [showPassword, setShowPassword] = useState(false)
   const [localError, setLocalError] = useState(null)
 
   const handleSubmit = async (e) => {
@@ -45,16 +46,18 @@ export default function AuthModal({ onClose }) {
         {/* Header */}
         <div className="auth-modal__header">
           <div className="auth-modal__logo">
-            <span className="auth-modal__logo-icon">⬡</span>
-            <span className="auth-modal__logo-text">BaseAI</span>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white text-sm shadow-md">
+              S
+            </div>
+            <span className="auth-modal__logo-text">Base<span className="gradient-text">AI</span></span>
           </div>
           <h2 className="auth-modal__title">
-            {mode === 'login' ? 'Welcome back' : 'Create your account'}
+            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
           </h2>
           <p className="auth-modal__subtitle">
             {mode === 'login'
-              ? 'Sign in to access your saved schemas and projects.'
-              : 'Start building enterprise-grade database architectures.'}
+              ? 'Sign in to access your enterprise database designs.'
+              : 'Architect production-ready schemas with 109 rules.'}
           </p>
         </div>
 
@@ -73,7 +76,7 @@ export default function AuthModal({ onClose }) {
               <input
                 id="auth-name"
                 type="text"
-                placeholder="e.g. Arjun Sharma"
+                placeholder="e.g. Alex Morgan"
                 value={form.displayName}
                 onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))}
                 required
@@ -82,7 +85,7 @@ export default function AuthModal({ onClose }) {
           )}
 
           <div className="auth-field">
-            <label htmlFor="auth-email">Email</label>
+            <label htmlFor="auth-email">Work Email</label>
             <input
               id="auth-email"
               type="email"
@@ -93,17 +96,26 @@ export default function AuthModal({ onClose }) {
             />
           </div>
 
-          <div className="auth-field">
+          <div className="auth-field relative">
             <label htmlFor="auth-password">Password</label>
-            <input
-              id="auth-password"
-              type="password"
-              placeholder={mode === 'register' ? 'Min 6 characters' : '••••••••'}
-              value={form.password}
-              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              required
-              minLength={6}
-            />
+            <div className="relative">
+              <input
+                id="auth-password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder={mode === 'register' ? 'Min 6 characters' : '••••••••'}
+                value={form.password}
+                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-200"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
 
           <button
@@ -112,8 +124,8 @@ export default function AuthModal({ onClose }) {
             disabled={loading}
           >
             {loading
-              ? 'Please wait…'
-              : mode === 'login' ? 'Sign In' : 'Create Account'}
+              ? 'Processing…'
+              : mode === 'login' ? 'Sign In' : 'Create Free Account'}
           </button>
         </form>
 
@@ -123,12 +135,12 @@ export default function AuthModal({ onClose }) {
             <>
               Don't have an account?{' '}
               <button className="auth-toggle" onClick={() => setMode('register')}>
-                Sign up free
+                Register free
               </button>
             </>
           ) : (
             <>
-              Already have an account?{' '}
+              Already registered?{' '}
               <button className="auth-toggle" onClick={() => setMode('login')}>
                 Sign in
               </button>

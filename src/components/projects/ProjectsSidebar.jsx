@@ -1,16 +1,16 @@
 /* src/components/projects/ProjectsSidebar.jsx
-   Persistent project history sidebar.
-   Shows when logged in; collapses on mobile.
-   ─────────────────────────────────────────── */
+   Persistent project history sidebar with live search filtering and version status badges.
+*/
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { projectsApi } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import './ProjectsSidebar.css'
 
 export default function ProjectsSidebar({ currentSessionId, onSelectProject, onNewChat }) {
-  const { user, isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAuth()
   const [projects, setProjects] = useState([])
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState({})
   const [error, setError] = useState(null)
@@ -23,7 +23,7 @@ export default function ProjectsSidebar({ currentSessionId, onSelectProject, onN
       const data = await projectsApi.list()
       setProjects(data)
     } catch (err) {
-      setError('Failed to load projects')
+      setError('Failed to sync projects')
     } finally {
       setLoading(false)
     }
@@ -38,26 +38,32 @@ export default function ProjectsSidebar({ currentSessionId, onSelectProject, onN
   }
 
   const gradeColor = (score) => {
-    if (!score) return '#6b7280'
+    if (!score) return '#64748b'
     if (score >= 90) return '#10b981'
-    if (score >= 75) return '#6366f1'
+    if (score >= 75) return '#818cf8'
     if (score >= 60) return '#f59e0b'
-    return '#ef4444'
+    return '#f43f5e'
   }
+
+  const filteredProjects = projects.filter(p => 
+    p.name?.toLowerCase().includes(search.toLowerCase()) ||
+    p.domain?.toLowerCase().includes(search.toLowerCase())
+  )
 
   if (!isAuthenticated) {
     return (
       <aside className="projects-sidebar projects-sidebar--guest">
         <div className="projects-sidebar__guest-msg">
           <div className="projects-sidebar__guest-icon">🔒</div>
-          <p>Sign in to save your projects and access schema history</p>
+          <p className="font-semibold text-slate-300">Save Your Architectures</p>
+          <p className="text-xs text-slate-500 mt-1">Sign in to save project versions, track compliance scores, and download DDL history.</p>
         </div>
       </aside>
     )
   }
 
   return (
-    <aside className="projects-sidebar">
+    <aside className="projects-sidebar scrollbar-thin">
       {/* Header */}
       <div className="projects-sidebar__header">
         <div className="projects-sidebar__title-row">
@@ -67,25 +73,38 @@ export default function ProjectsSidebar({ currentSessionId, onSelectProject, onN
         <button
           className="projects-sidebar__new-btn"
           onClick={onNewChat}
-          title="New database design"
+          title="Start new database design"
         >
           + New
         </button>
       </div>
 
+      {/* Search Input */}
+      {projects.length > 3 && (
+        <div className="px-3 pb-2">
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Filter projects..."
+            className="w-full bg-slate-900/90 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/50"
+          />
+        </div>
+      )}
+
       {/* Loading */}
       {loading && (
         <div className="projects-sidebar__loading">
           <div className="projects-sidebar__spinner" />
-          <span>Loading projects…</span>
+          <span>Syncing projects…</span>
         </div>
       )}
 
       {/* Error */}
       {error && (
         <div className="projects-sidebar__error">
-          {error}
-          <button onClick={fetchProjects}>Retry</button>
+          <span>{error}</span>
+          <button onClick={fetchProjects} className="text-xs underline text-indigo-400">Retry</button>
         </div>
       )}
 
@@ -93,34 +112,29 @@ export default function ProjectsSidebar({ currentSessionId, onSelectProject, onN
       {!loading && !error && projects.length === 0 && (
         <div className="projects-sidebar__empty">
           <div className="projects-sidebar__empty-icon">📐</div>
-          <p>No projects yet.</p>
-          <p>Start a new conversation to create one.</p>
+          <p className="font-medium text-slate-400 text-xs">No saved projects</p>
+          <p className="text-[11px] text-slate-600 mt-0.5">Start a session to design your first schema.</p>
         </div>
       )}
 
       {/* Project list */}
       <ul className="projects-sidebar__list">
-        {projects.map(project => (
-          <li
-            key={project.id}
-            className="projects-sidebar__item"
-          >
+        {filteredProjects.map(project => (
+          <li key={project.id} className="projects-sidebar__item">
             {/* Project row */}
             <div
               className="projects-sidebar__project"
               onClick={() => toggleExpanded(project.id)}
             >
               <div className="projects-sidebar__project-icon">
-                {project.domain
-                  ? domainIcon(project.domain)
-                  : '📦'}
+                {project.domain ? domainIcon(project.domain) : '📦'}
               </div>
               <div className="projects-sidebar__project-info">
                 <div className="projects-sidebar__project-name">
                   {project.name}
                 </div>
                 <div className="projects-sidebar__project-meta">
-                  <span>{project.version_count} version{project.version_count !== 1 ? 's' : ''}</span>
+                  <span>{project.version_count} v{project.version_count !== 1 ? 's' : ''}</span>
                   {project.latest_score != null && (
                     <span
                       className="projects-sidebar__score"
@@ -152,7 +166,7 @@ export default function ProjectsSidebar({ currentSessionId, onSelectProject, onN
                       {v.tables_count ? `${v.tables_count} tables` : v.status}
                       {v.validation_score != null && (
                         <span style={{ color: gradeColor(v.validation_score) }}>
-                          {' '}· {v.validation_score}/100
+                          {' '}• {v.validation_score}/100
                         </span>
                       )}
                     </span>
@@ -170,11 +184,10 @@ export default function ProjectsSidebar({ currentSessionId, onSelectProject, onN
 function domainIcon(domain) {
   const d = (domain || '').toLowerCase()
   if (d.includes('hospital') || d.includes('health') || d.includes('medical')) return '🏥'
-  if (d.includes('finance') || d.includes('bank')) return '🏦'
-  if (d.includes('school') || d.includes('education')) return '🏫'
+  if (d.includes('finance') || d.includes('bank') || d.includes('ledger')) return '🏦'
+  if (d.includes('school') || d.includes('education') || d.includes('learning')) return '🏫'
   if (d.includes('logistics') || d.includes('delivery')) return '🚚'
   if (d.includes('ecommerce') || d.includes('shop')) return '🛒'
-  if (d.includes('hotel') || d.includes('travel')) return '✈️'
-  if (d.includes('restaurant') || d.includes('food')) return '🍽️'
+  if (d.includes('hotel') || d.includes('travel') || d.includes('real_estate')) return '🏢'
   return '🗄️'
 }

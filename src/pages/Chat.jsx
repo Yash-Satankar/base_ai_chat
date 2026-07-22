@@ -1,6 +1,6 @@
 // src/pages/Chat.jsx
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ChatWindow from '../components/chat/ChatWindow'
 import InputBar from '../components/chat/InputBar'
@@ -11,7 +11,7 @@ import GenerationProgress from '../components/ui/GenerationProgress'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from '../components/auth/AuthModal'
 import ProjectsSidebar from '../components/projects/ProjectsSidebar'
-import { projectsApi, conversationApi } from '../api/client'
+import { projectsApi } from '../api/client'
 
 export default function Chat() {
   const navigate = useNavigate()
@@ -29,7 +29,6 @@ export default function Chat() {
     metadata,
     genSummary,
     isLoading,
-    error,
     messagesEndRef,
     startSession,
     loadExistingVersion,
@@ -80,23 +79,26 @@ export default function Chat() {
 
   const isGenerating = stage === 'generating' || isPolling
 
-
   return (
-    <div className="h-screen flex flex-col bg-slate-950">
-
+    <div className="h-screen flex flex-col bg-[#090d16] text-slate-200">
       {/* ── Header ── */}
-      <header className="flex items-center justify-between
-                         px-4 py-3 border-b border-slate-800
-                         bg-slate-900/95 backdrop-blur-sm shrink-0">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-slate-800/80 bg-[#090d16]/90 backdrop-blur-xl shrink-0 z-30 shadow-md">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/')}
-            className="text-slate-400 hover:text-white transition-colors text-sm"
+            className="text-slate-400 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-800/60"
           >
             ← Home
           </button>
           <span className="text-slate-700">|</span>
-          <span className="text-white font-semibold text-sm">🗄️ SchemaAI</span>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white text-xs shadow-sm">
+              S
+            </div>
+            <span className="font-extrabold text-white text-sm tracking-tight hidden sm:inline">
+              Base<span className="gradient-text">AI</span> Workbench
+            </span>
+          </div>
         </div>
 
         {/* Stage indicator */}
@@ -106,34 +108,24 @@ export default function Chat() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          {sessionId && !sessionId.startsWith('project_ver_') && (
-            <span className="text-xs text-slate-600 font-mono hidden sm:block">
-              Session: {sessionId.slice(0, 8)}...
-            </span>
-          )}
           <button
             onClick={handleNewSession}
             disabled={isLoading || isPolling}
-            className="text-xs px-3 py-1.5 rounded-lg
-                       border border-slate-700 text-slate-400
-                       hover:border-slate-500 hover:text-slate-200
-                       transition-all disabled:opacity-50"
+            className="text-xs px-3 py-1.5 rounded-xl border border-slate-700/80 text-slate-300 hover:border-indigo-500/50 hover:text-white hover:bg-indigo-500/10 transition-all disabled:opacity-50 font-medium"
           >
-            New Session
+            + New Design
           </button>
 
           <span className="text-slate-800">|</span>
 
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-indigo-400 font-medium max-w-[85px] truncate">
+              <span className="text-xs text-indigo-300 font-semibold max-w-[100px] truncate bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-lg">
                 {user.displayName}
               </span>
               <button
                 onClick={logout}
-                className="text-xs px-2.5 py-1.5 rounded-lg
-                           bg-slate-800 hover:bg-slate-700 text-slate-300
-                           transition-all"
+                className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition-all"
               >
                 Sign Out
               </button>
@@ -141,9 +133,7 @@ export default function Chat() {
           ) : (
             <button
               onClick={() => setShowAuthModal(true)}
-              className="text-xs px-3 py-1.5 rounded-lg
-                         bg-indigo-600 hover:bg-indigo-500 text-white font-medium
-                         transition-all"
+              className="text-xs px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.02]"
             >
               Sign In
             </button>
@@ -151,9 +141,8 @@ export default function Chat() {
         </div>
       </header>
 
-      {/* ── Main area ── */}
+      {/* ── Main Workspace ── */}
       <div className="flex flex-1 overflow-hidden">
-
         {/* Left projects sidebar */}
         <ProjectsSidebar
           key={sidebarKey}
@@ -162,14 +151,13 @@ export default function Chat() {
           onNewChat={handleNewSession}
         />
 
-        {/* Chat */}
-        <div className="flex flex-col flex-1 overflow-hidden">
-
+        {/* Chat main area */}
+        <div className="flex flex-col flex-1 overflow-hidden bg-gradient-to-b from-[#090d16] to-[#0c1220]">
           {starting ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center space-y-3">
-                <Spinner size="lg" className="mx-auto" />
-                <p className="text-slate-400 text-sm">Starting session...</p>
+                <Spinner size="lg" className="mx-auto text-indigo-500" />
+                <p className="text-slate-400 text-sm font-medium">Initializing Workbench...</p>
               </div>
             </div>
           ) : (
@@ -177,6 +165,7 @@ export default function Chat() {
               messages={messages}
               messagesEndRef={messagesEndRef}
               sessionId={sessionId}
+              onQuickStart={sendMessage}
             />
           )}
 
@@ -188,9 +177,7 @@ export default function Chat() {
         </div>
 
         {/* ── Right sidebar ── */}
-        <aside className="hidden lg:flex flex-col w-72
-                           border-l border-slate-800 bg-slate-900/50
-                           overflow-y-auto shrink-0">
+        <aside className="hidden lg:flex flex-col w-80 border-l border-slate-800/80 bg-[#090d16]/70 overflow-y-auto shrink-0 z-10 backdrop-blur-md">
           <ContextPanel
             stage={stage}
             blueprint={blueprint}
@@ -198,7 +185,6 @@ export default function Chat() {
             genSummary={genSummary}
             sessionId={sessionId}
             metadata={metadata}
-            // Generation progress
             jobId={jobId}
             jobStatus={jobStatus}
             progress={progress}
@@ -206,40 +192,36 @@ export default function Chat() {
           />
         </aside>
       </div>
+
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   )
 }
 
-
-// ── Stage indicator ──────────────────────────────────────────────
-
 function StageIndicator({ stage, isLoading, isPolling }) {
   const colors = {
     idle:       'bg-slate-500',
-    initial:    'bg-blue-500',
-    clarifying: 'bg-yellow-500',
+    initial:    'bg-indigo-500',
+    clarifying: 'bg-amber-500',
     blueprint:  'bg-purple-500',
-    confirmed:  'bg-orange-500',
+    confirmed:  'bg-indigo-400',
     generating: 'bg-violet-500 animate-pulse',
-    fixing:     'bg-orange-500 animate-pulse',
-    complete:   'bg-green-500',
+    fixing:     'bg-rose-500 animate-pulse',
+    complete:   'bg-emerald-500',
   }
 
   const showSpinner = isLoading || isPolling
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2.5 px-3 py-1 glass-panel rounded-full border border-slate-800">
       {showSpinner && <Spinner size="sm" />}
       <div className={`w-2 h-2 rounded-full ${colors[stage] || 'bg-slate-500'}`} />
-      <span className="text-xs text-slate-400">
+      <span className="text-xs font-semibold text-slate-300">
         {formatStage(stage)}
       </span>
     </div>
   )
 }
-
-
-// ── Context panel (right sidebar) ──────────────────────────────────
 
 function ContextPanel({
   stage, blueprint, validation, genSummary, sessionId,
@@ -247,36 +229,29 @@ function ContextPanel({
 }) {
   const [activeTab, setActiveTab] = useState('blueprint')
 
-  // Extract metadata
-  const l1 = metadata?.l1_understanding
-  const l2 = metadata?.l2_capabilities
-  const trace = metadata?.traceability_graph?.tables
-  const council = metadata?.council_synthesis
   const sim = metadata?.simulation_report
   const genome = metadata?.genome
-  const benchmarks = metadata?.benchmarks
+  const trace = metadata?.traceability_graph?.tables
   const recs = metadata?.proactive_recommendations
 
   return (
-    <div className="flex flex-col h-full bg-slate-900/40">
+    <div className="flex flex-col h-full bg-[#090d16]/50">
       {/* Tab Headers */}
-      <div className="flex border-b border-slate-800 bg-slate-950 px-1 py-1 shrink-0 overflow-x-auto whitespace-nowrap scrollbar-none">
+      <div className="flex border-b border-slate-800/80 bg-[#060911] px-1 py-1 shrink-0 overflow-x-auto whitespace-nowrap scrollbar-none">
         <TabButton active={activeTab === 'blueprint'} onClick={() => setActiveTab('blueprint')} label="Blueprint" />
-        {sim && <TabButton active={activeTab === 'simulation'} onClick={() => setActiveTab('simulation')} label="Simulation & Council" />}
-        {genome && <TabButton active={activeTab === 'genome'} onClick={() => setActiveTab('genome')} label="DNA & Benchmarks" />}
+        {sim && <TabButton active={activeTab === 'simulation'} onClick={() => setActiveTab('simulation')} label="Simulation" />}
+        {genome && <TabButton active={activeTab === 'genome'} onClick={() => setActiveTab('genome')} label="DNA Specs" />}
         {recs && recs.length > 0 && <TabButton active={activeTab === 'recommendations'} onClick={() => setActiveTab('recommendations')} label="Recs" />}
-        {trace && <TabButton active={activeTab === 'traceability'} onClick={() => setActiveTab('traceability')} label="Traceability" />}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
         {/* Live Generation Progress */}
         {isGenerating && (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-violet-400 uppercase tracking-wider">
-              ⚡ Generating
+            <p className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
+              ⚡ Generation Pipeline
             </p>
-            <div className="bg-slate-800/80 rounded-xl p-3 border border-violet-500/20
-                            shadow-lg shadow-violet-900/10">
+            <div className="glass-panel rounded-2xl p-4 border border-indigo-500/20 shadow-xl shadow-indigo-900/10">
               <GenerationProgress
                 jobStatus={jobStatus}
                 progress={progress}
@@ -288,249 +263,45 @@ function ContextPanel({
 
         {activeTab === 'blueprint' && (
           <>
-            {/* Blueprint summary */}
             {blueprint && (
               <div className="space-y-2">
-                <p className="text-xs font-medium text-slate-400">Blueprint (L8)</p>
-                <div className="bg-slate-800 rounded-lg p-3 space-y-1">
-                  <p className="text-sm font-medium text-white">
+                <p className="text-xs font-semibold text-slate-400">Blueprint (L8 Spec)</p>
+                <div className="glass-card rounded-xl p-3.5 space-y-2 border border-slate-800">
+                  <p className="text-sm font-bold text-white">
                     {blueprint.project_name}
                   </p>
-                  <p className="text-xs text-slate-400">
-                    {blueprint.modules?.length || 0} modules ·{' '}
-                    {blueprint.modules?.reduce(
-                      (s, m) => s + (m.tables?.length || 0), 0
-                    )}{' '}
-                    tables planned
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    Domain: {blueprint.domain?.replace(/_/g, ' ')}
+                  <p className="text-xs text-slate-400 font-medium">
+                    {blueprint.modules?.length || 0} Modules Planned
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Validation score */}
             {validation && (
               <div className="space-y-2">
-                <p className="text-xs font-medium text-slate-400">
-                  Quality Score
-                </p>
-                <div className="bg-slate-800 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-2xl font-bold text-white">
-                      {validation.score}
-                      <span className="text-sm text-slate-500">/100</span>
-                    </span>
-                    <span className={`text-lg font-bold
-                      ${validation.grade === 'A' ? 'text-green-400'
-                        : validation.grade === 'B' ? 'text-blue-400'
-                        : validation.grade === 'C' ? 'text-yellow-400'
-                        : validation.grade === 'F' ? 'text-red-400'
-                        : 'text-orange-400'}`}
-                    >
-                      {validation.grade}
-                    </span>
+                <p className="text-xs font-semibold text-slate-400">Rules Compliance</p>
+                <div className="glass-card rounded-xl p-3.5 space-y-1.5 border border-slate-800">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400 font-medium">Validation Score:</span>
+                    <span className="font-bold text-emerald-400">{validation.score} / 100</span>
                   </div>
-                  <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${
-                        validation.score >= 90 ? 'bg-green-500'
-                        : validation.score >= 80 ? 'bg-blue-500'
-                        : validation.score >= 70 ? 'bg-yellow-500'
-                        : 'bg-red-500'
-                      }`}
-                      style={{ width: `${validation.score}%` }}
-                    />
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400 font-medium">Status:</span>
+                    <span className="font-semibold text-slate-200">{validation.passed ? 'Passed (Grade A)' : 'Action Required'}</span>
                   </div>
-                  <p className="text-[10px] text-slate-600 mt-1.5">
-                    {validation.passed ? '✅ Production ready' : '⚠️ Needs review'}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Download links */}
-            {stage === 'complete' && sessionId && (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-slate-400">Downloads</p>
-                <div className="space-y-2">
-                  <SidebarDownloadBtn
-                    href={conversationApi.downloadSql(sessionId)}
-                    icon="📄"
-                    label="Download SQL"
-                  />
-                  <SidebarDownloadBtn
-                    href={conversationApi.downloadPdf(sessionId)}
-                    icon="📋"
-                    label="Download PDF"
-                  />
                 </div>
               </div>
             )}
           </>
         )}
-
-        {activeTab === 'simulation' && sim && (
-          <div className="space-y-4">
-            {/* Simulation health report */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-slate-400">Simulation Health Report</p>
-              <div className="bg-slate-800 rounded-lg p-3 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400">Simulated Scale:</span>
-                  <span className="text-xs font-semibold text-white uppercase">{sim.scale_simulated}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400">Avg Write Amplification:</span>
-                  <span className="text-xs font-semibold text-amber-400">{sim.average_write_amplification}x</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400">Simulated Health Score:</span>
-                  <span className={`text-xs font-bold ${sim.health_score >= 85 ? 'text-green-400' : 'text-yellow-400'}`}>
-                    {sim.health_score}/100
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottlenecks */}
-            {sim.bottlenecks && sim.bottlenecks.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-red-400">Predicted Bottlenecks</p>
-                <div className="space-y-2">
-                  {sim.bottlenecks.map((b, idx) => (
-                    <div key={idx} className="bg-red-500/5 border border-red-500/25 rounded-lg p-2.5 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <code className="text-[11px] font-mono text-red-300 font-bold">{b.table}</code>
-                        <span className="text-[9px] bg-red-500/20 text-red-300 px-1 rounded font-semibold">{b.type}</span>
-                      </div>
-                      <p className="text-[10px] text-slate-400">{b.recommendation}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Council reviews */}
-            {council && (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-slate-400">Architecture Council Review</p>
-                <div className="bg-slate-800 rounded-lg p-3 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Consensus Verdict:</span>
-                    <span className={`text-xs font-bold ${council.consensus_verdict === 'APPROVED' ? 'text-green-400' : 'text-amber-400'}`}>
-                      {council.consensus_verdict}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Consensus Score:</span>
-                    <span className="text-xs font-bold text-white">{council.consensus_score}/100</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'genome' && genome && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-slate-400">Architecture Genome DNA</p>
-              <div className="bg-slate-800 rounded-lg p-3 space-y-3">
-                <GenomeMetric label="Workflow Complexity" val={genome.workflow_complexity} />
-                <GenomeMetric label="Audit Intensity" val={genome.audit_intensity} />
-                <GenomeMetric label="Financial Depth" val={genome.financial_depth} />
-                <GenomeMetric label="Document Density" val={genome.document_density} />
-                <GenomeMetric label="Approval Complexity" val={genome.approval_complexity} />
-                <GenomeMetric label="Lifecycle Depth" val={genome.lifecycle_depth} />
-                <GenomeMetric label="Reuse Score" val={genome.reuse_score} />
-              </div>
-            </div>
-
-            {/* Benchmarks */}
-            {benchmarks && benchmarks.benchmarks && (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-slate-400">Reference Benchmarks</p>
-                <div className="space-y-2">
-                  {benchmarks.benchmarks.map((b, idx) => (
-                    <div key={idx} className="bg-slate-850 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between">
-                      <span className="text-[11px] text-slate-300 font-medium">{b.reference_name}</span>
-                      <span className="text-xs font-bold text-blue-400">{b.similarity_percentage}% match</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'recommendations' && recs && (
-          <div className="space-y-3">
-            <p className="text-xs font-medium text-slate-400">Proactive Recommendations</p>
-            {recs.map((r, idx) => (
-              <div key={idx} className="bg-violet-950/20 border border-violet-500/25 rounded-lg p-3 space-y-1.5 shadow-lg shadow-violet-950/10">
-                <p className="text-xs font-bold text-violet-300">{r.title}</p>
-                <p className="text-[10px] text-slate-400">{r.description}</p>
-                {r.suggested_table && (
-                  <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-violet-500/10">
-                    <span className="text-[10px] font-mono text-violet-400">{r.suggested_table}</span>
-                    <span className="text-[9px] text-violet-300 font-semibold uppercase tracking-wider">Suggested Add</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {activeTab === 'traceability' && trace && (
-          <div className="space-y-3">
-            <p className="text-xs font-medium text-slate-400">Traceability Graph</p>
-            {Object.entries(trace).map(([tableName, tInfo]) => (
-              <div key={tableName} className="bg-slate-800 rounded-lg p-3 space-y-2 border border-slate-700/50">
-                <div className="flex items-center justify-between">
-                  <code className="text-xs text-blue-300 font-mono font-bold">{tableName}</code>
-                  {tInfo.reusable_component && (
-                    <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded">
-                      {tInfo.reusable_component}
-                    </span>
-                  )}
-                </div>
-                <p className="text-[11px] text-slate-300">
-                  <span className="text-slate-500">Capability:</span> {tInfo.originating_capability}
-                </p>
-                <p className="text-[11px] text-slate-400">{tInfo.design_rationale}</p>
-                {tInfo.alternatives_considered && (
-                  <p className="text-[10px] text-slate-500 bg-slate-900/50 p-1.5 rounded border border-slate-800">
-                    <span className="text-amber-500/80 font-medium font-semibold">Rejected:</span> {tInfo.alternatives_considered}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-      {/* Tips */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950/50">
-        <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
-          {isGenerating ? 'While you wait' : 'Tips'}
+
+      {/* Guide Footnote */}
+      <div className="p-4 border-t border-slate-800/80 bg-[#060911]/80">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+          {isGenerating ? 'Pipeline Active' : 'Workbench Guidance'}
         </p>
         <TipsByStage stage={isGenerating ? 'generating' : stage} />
-      </div>
-    </div>
-  )
-}
-
-function GenomeMetric({ label, val }) {
-  const pct = Math.round(val * 100)
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-[10px]">
-        <span className="text-slate-400 font-medium">{label}</span>
-        <span className="text-slate-300 font-bold">{pct}%</span>
-      </div>
-      <div className="h-1 bg-slate-750 rounded-full overflow-hidden">
-        <div className="h-full bg-violet-500 rounded-full" style={{ width: `${pct}%` }} />
       </div>
     </div>
   )
@@ -540,9 +311,9 @@ function TabButton({ active, onClick, label }) {
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-2 text-xs font-medium border-b-2 transition-all ${
+      className={`px-3 py-2 text-xs font-semibold border-b-2 transition-all ${
         active
-          ? 'border-blue-500 text-blue-400 bg-slate-900/40'
+          ? 'border-indigo-500 text-indigo-400 bg-slate-900/60'
           : 'border-transparent text-slate-500 hover:text-slate-300'
       }`}
     >
@@ -551,42 +322,22 @@ function TabButton({ active, onClick, label }) {
   )
 }
 
-
-
-function SidebarDownloadBtn({ href, icon, label }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-2 w-full px-3 py-2
-                 rounded-lg border border-slate-700 text-slate-300
-                 hover:border-blue-500/40 hover:text-blue-300
-                 hover:bg-blue-500/5 transition-all text-xs"
-    >
-      <span>{icon}</span>
-      <span>{label}</span>
-    </a>
-  )
-}
-
-
 function TipsByStage({ stage }) {
   const tips = {
-    initial:    ['Be specific about your domain', 'Mention if GST is needed', 'Describe the scale'],
-    clarifying: ['Answer all questions', 'Skip ones that don\'t apply', 'More detail = better schema'],
-    blueprint:  ['Review every module', 'Check table names', 'Type YES to confirm'],
-    generating: ['Your schema is being built module by module', 'Each module gets 4 tables per AI call', 'Progress updates every ~3 seconds'],
-    complete:   ['Download both files', 'Type "explain [table]" for details', 'Start over for new project'],
+    initial:    ['Specify core entities & relationship types', 'Mention GST/tax compliance requirements', 'State expected database scale'],
+    clarifying: ['Provide as much context as possible', 'Skip rules that don\'t apply', 'Type "Generate Blueprint" when ready'],
+    blueprint:  ['Review target modules and tables', 'Type YES to launch schema generator'],
+    generating: ['Multi-pass batching generates tables in isolation', 'Validation rules applied on every table'],
+    complete:   ['Download SQL DDL and PDF technical specs', 'Ask to explain individual tables'],
   }
 
-  const stageTips = tips[stage] || ['Describe your database project to begin']
+  const stageTips = tips[stage] || ['Describe your database requirements to begin']
 
   return (
-    <ul className="space-y-1">
+    <ul className="space-y-1.5">
       {stageTips.map((tip, i) => (
-        <li key={i} className="text-xs text-slate-500 flex items-start gap-1">
-          <span className="text-slate-600 mt-0.5">·</span>
+        <li key={i} className="text-xs text-slate-400 flex items-start gap-1.5 leading-normal">
+          <span className="text-indigo-400 font-bold">•</span>
           {tip}
         </li>
       ))}
