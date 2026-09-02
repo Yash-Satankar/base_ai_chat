@@ -53,6 +53,16 @@ export default function useConversation() {
       onComplete: useCallback((result) => {
         if (!result) return
 
+        // Blueprint-compile job (Phase 2): the L1-L8 compile now runs as a
+        // job. Its result carries a blueprint + message + stage, not a schema.
+        if (result.blueprint && !result.schema) {
+          setBlueprint(result.blueprint)
+          setStage(result.stage || STAGES.BLUEPRINT)
+          setIsLoading(false)
+          if (result.message) addMessage('assistant', result.message, { blueprint: result.blueprint })
+          return
+        }
+
         // Unpack the completed schema result.
         // NOTE (default API contract): `metadata` (L1-L7, provider/model,
         // rule IDs) is NOT included and `validation` is the lean form
@@ -189,13 +199,14 @@ export default function useConversation() {
       if (data.stage && data.stage !== 'unknown') setStage(data.stage)
       if (data.blueprint) setBlueprint(data.blueprint)
 
-      // ── Generation triggered by the conversation API ──────────
-      // The conversation backend signals that the user confirmed and
-      // generation should begin.  We submit a job and start polling.
-      if (data.stage === STAGES.GENERATING && data.requirement) {
+      // ── Async job triggered by the conversation API ──────────
+      // stage 'generating' + requirement  → SQL generation job (mode "schema")
+      // stage 'compiling'  + requirement  → L1-L8 blueprint compile job (mode "blueprint")
+      // Both are polled via /planner/job/{id}; onComplete handles either result.
+      if ((data.stage === STAGES.GENERATING || data.stage === 'compiling') && data.requirement) {
         isGeneratingTriggered = true
-        addMessage('assistant', data.message || '🚀 Starting schema generation…', {
-          action: 'generation_started',
+        addMessage('assistant', data.message || 'Working on it…', {
+          action: data.mode === 'blueprint' ? 'blueprint_started' : 'generation_started',
         })
         // setIsLoading stays true — controlled by onComplete/onError
         submitAndPoll(
@@ -203,6 +214,7 @@ export default function useConversation() {
           data.blueprint   || blueprint,
           data.additional_context ?? null,
           sessionId,
+          data.mode || 'schema',
         )
         return
       }

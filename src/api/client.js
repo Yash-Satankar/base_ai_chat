@@ -127,12 +127,13 @@ export const healthApi = {
 // ── Planner (async job) API ──────────────────────────────────────
 
 export const plannerApi = {
-  submitJob: (requirement, blueprint = null, additionalContext = null, sessionId = null) =>
+  submitJob: (requirement, blueprint = null, additionalContext = null, sessionId = null, mode = 'schema') =>
     api.post('/planner/generate', {
       requirement,
       blueprint,
       additional_context: additionalContext,
       session_id: sessionId,
+      mode,
     }).then(r => r.data),
 
   pollJob: (jobId) =>

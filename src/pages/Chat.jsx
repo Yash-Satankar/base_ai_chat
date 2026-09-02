@@ -203,6 +203,7 @@ function StageIndicator({ stage, isLoading, isPolling }) {
     idle:       'bg-slate-500',
     initial:    'bg-indigo-500',
     clarifying: 'bg-amber-500',
+    compiling:  'bg-violet-500 animate-pulse',
     blueprint:  'bg-purple-500',
     confirmed:  'bg-indigo-400',
     generating: 'bg-violet-500 animate-pulse',

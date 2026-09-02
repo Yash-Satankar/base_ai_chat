@@ -102,7 +102,7 @@ export default function useJobPoller({ onComplete, onError }) {
   }, [stopPolling, onComplete, onError])
 
   // ── Submit a new job and start polling ────────────────────────
-  const submitAndPoll = useCallback(async (requirement, blueprint = null, additionalContext = null, sessionId = null) => {
+  const submitAndPoll = useCallback(async (requirement, blueprint = null, additionalContext = null, sessionId = null, mode = 'schema') => {
     // Cancel any in-flight job
     stopPolling()
     activeJob.current = null
@@ -115,7 +115,7 @@ export default function useJobPoller({ onComplete, onError }) {
     lastProgressTs.current = Date.now()
 
     try {
-      const data = await plannerApi.submitJob(requirement, blueprint, additionalContext, sessionId)
+      const data = await plannerApi.submitJob(requirement, blueprint, additionalContext, sessionId, mode)
       const newJobId = data.job_id
       setJobId(newJobId)
       activeJob.current = newJobId

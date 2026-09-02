@@ -5,6 +5,7 @@ export function formatStage(stage) {
     idle:        'Ready',
     initial:     'Getting started',
     clarifying:  'Gathering requirements',
+    compiling:   'Designing blueprint...',
     blueprint:   'Blueprint ready',
     confirmed:   'Blueprint confirmed',
     generating:  'Generating schema...',
