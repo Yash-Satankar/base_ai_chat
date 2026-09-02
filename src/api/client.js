@@ -21,6 +21,10 @@ api.interceptors.request.use(config => {
 })
 
 // ── Global error handler ─────────────────────────────────────────
+// NOTE: /conversation/* endpoints no longer return a 5xx for engine
+// failures — they reply 200 with an in-persona `message` and the preserved
+// `stage` (and `success: false`). This handler therefore only sees genuine
+// transport/client conditions there (network down, 400, 401, 404, 429).
 api.interceptors.response.use(
   response => response,
   error => {

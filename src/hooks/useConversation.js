@@ -53,12 +53,17 @@ export default function useConversation() {
       onComplete: useCallback((result) => {
         if (!result) return
 
-        // Unpack the completed schema result
+        // Unpack the completed schema result.
+        // NOTE (default API contract): `metadata` (L1-L7, provider/model,
+        // rule IDs) is NOT included and `validation` is the lean form
+        // { score, passed, grade, summary } with no per-rule issue list.
+        // The full payload is only returned to a staff `X-Debug: true`
+        // request. Every read below is guarded accordingly.
         const { schema: sql, validation: val, metadata: meta, generation_summary } = result
 
-        if (sql)              setSchema(sql)
-        if (val)              setValidation(val)
-        if (meta)             setMetadata(meta)
+        if (sql)                setSchema(sql)
+        if (val)                setValidation(val)
+        if (meta)               setMetadata(meta)
         if (generation_summary) setGenSummary(generation_summary)
 
         setStage(STAGES.COMPLETE)
@@ -174,7 +179,14 @@ export default function useConversation() {
       // Remove typing indicator
       setMessages(prev => prev.filter(m => m.id !== typingId))
 
-      if (data.stage) setStage(data.stage)
+      // NOTE: /conversation/message never returns a 5xx for an engine
+      // failure anymore. On a backend hiccup it replies 200 with an
+      // in-persona `message`, the preserved `stage`, and `success: false`.
+      // We render that message as a normal assistant turn (no error
+      // styling) and simply don't advance any optimistic state.
+      // "unknown" is the sentinel stage from the last-resort handler —
+      // never overwrite a real stage with it.
+      if (data.stage && data.stage !== 'unknown') setStage(data.stage)
       if (data.blueprint) setBlueprint(data.blueprint)
 
       // ── Generation triggered by the conversation API ──────────
@@ -196,6 +208,9 @@ export default function useConversation() {
       }
 
       // ── Normal conversation turn ──────────────────────────────
+      // `metadata` / `validation` are not part of the default
+      // /conversation/message contract (staff debug view only) — these
+      // guards make their absence a no-op rather than a break.
       if (data.schema)     setSchema(data.schema)
       if (data.validation) setValidation(data.validation)
       if (data.metadata)   setMetadata(data.metadata)

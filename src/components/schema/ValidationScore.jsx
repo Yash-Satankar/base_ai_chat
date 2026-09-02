@@ -7,8 +7,16 @@ import Badge from '../ui/Badge'
 export default function ValidationScore({ validation }) {
   if (!validation) return null
 
-  const { score, grade, total_issues, issues = [] } = validation
-  const passed = score >= 60
+  const { score, grade, total_issues, issues } = validation
+  const passed = validation.passed ?? score >= 60
+
+  // The default API contract returns a "lean" validation object — just the
+  // headline numbers, no per-rule issue list. Detect that so we never
+  // render "undefined issues" or a misleading "100% compliant" banner for
+  // a schema whose breakdown was simply not included in this view.
+  const hasBreakdown = Array.isArray(issues)
+  const issueList = hasBreakdown ? issues : []
+  const issueCount = total_issues ?? issueList.length
 
   return (
     <div className="w-full rounded-2xl border border-slate-800 bg-[#090d16] overflow-hidden glass-panel shadow-lg">
@@ -32,7 +40,9 @@ export default function ValidationScore({ validation }) {
                 </Badge>
               </div>
               <p className="text-xs text-slate-400 mt-0.5 font-medium">
-                {total_issues} compliance issue{total_issues !== 1 ? 's' : ''} evaluated
+                {hasBreakdown
+                  ? `${issueCount} compliance issue${issueCount !== 1 ? 's' : ''} evaluated`
+                  : 'Headline quality score'}
               </p>
             </div>
           </div>
@@ -60,20 +70,21 @@ export default function ValidationScore({ validation }) {
         </div>
       </div>
 
-      {/* Issues list */}
-      {issues.length > 0 && (
+      {/* Issues list (only when the breakdown is included) */}
+      {hasBreakdown && issueList.length > 0 && (
         <div className="px-4.5 py-3.5 space-y-2.5">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
             Rules Assessment Breakdown
           </p>
-          {issues.map((issue, i) => (
+          {issueList.map((issue, i) => (
             <IssueRow key={i} issue={issue} />
           ))}
         </div>
       )}
 
-      {/* Zero issues */}
-      {issues.length === 0 && (
+      {/* Zero issues — only assert full compliance when we actually have
+          the breakdown to back it up. */}
+      {hasBreakdown && issueList.length === 0 && (
         <div className="px-4.5 py-3.5 text-center bg-emerald-500/5 border-t border-emerald-500/10">
           <p className="text-xs font-semibold text-emerald-400">
             ✓ Excellent — Schema complies with 100% of architectural rules!

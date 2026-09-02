@@ -229,10 +229,16 @@ function ContextPanel({
 }) {
   const [activeTab, setActiveTab] = useState('blueprint')
 
+  // These advanced views are fed by the full generation `metadata`
+  // (simulation / genome / traceability / recommendations), which is NOT
+  // part of the default API contract — it is returned only to a staff
+  // `X-Debug: true` request. When it's absent the tabs simply don't appear;
+  // a short note below explains why so the panel doesn't regress silently.
   const sim = metadata?.simulation_report
   const genome = metadata?.genome
   const trace = metadata?.traceability_graph?.tables
   const recs = metadata?.proactive_recommendations
+  const advancedHidden = stage === 'complete' && !sim && !genome && !recs
 
   return (
     <div className="flex flex-col h-full bg-[#090d16]/50">
@@ -287,10 +293,44 @@ function ContextPanel({
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-400 font-medium">Status:</span>
-                    <span className="font-semibold text-slate-200">{validation.passed ? 'Passed (Grade A)' : 'Action Required'}</span>
+                    <span className="font-semibold text-slate-200">
+                      {validation.passed
+                        ? `Passed${validation.grade ? ` (Grade ${validation.grade})` : ''}`
+                        : 'Action Required'}
+                    </span>
                   </div>
                 </div>
               </div>
+            )}
+
+            {genSummary && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-slate-400">Generation Summary</p>
+                <div className="glass-card rounded-xl p-3.5 space-y-1.5 border border-slate-800 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-medium">Tables generated:</span>
+                    <span className="font-semibold text-slate-200">{genSummary.tables_generated ?? '—'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-medium">Modules:</span>
+                    <span className="font-semibold text-slate-200">
+                      {genSummary.modules_generated ?? genSummary.modules_planned ?? '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-medium">Completeness:</span>
+                    <span className="font-semibold text-slate-200">
+                      {genSummary.completeness_pct != null ? `${genSummary.completeness_pct}%` : '—'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {advancedHidden && (
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Deeper architecture analysis isn’t shown in this view.
+              </p>
             )}
           </>
         )}
