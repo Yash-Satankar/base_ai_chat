@@ -1,159 +1,247 @@
 // src/pages/Landing.jsx
-
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import Button from '../components/ui/Button'
+import Icon from '../components/ui/Icon'
+import Logo from '../components/ui/Logo'
 
 const FEATURES = [
-  {
-    icon: '⚡',
-    title: '109 Production Rules',
-    desc: 'Deep architectural blueprints compiled from 23 real enterprise systems.',
-  },
-  {
-    icon: '🛡️',
-    title: 'Automated Validation',
-    desc: 'Self-correcting schema validator enforcing 3NF normalization & foreign keys.',
-  },
-  {
-    icon: '📦',
-    title: 'Production Deliverables',
-    desc: 'Instantly download production-ready .SQL schemas & PDF technical specs.',
-  },
-  {
-    icon: '🔒',
-    title: 'Enterprise Compliance',
-    desc: 'Built-in audit trails, soft deletes, immutable logs, and GST compliance.',
-  },
+  { icon: 'layers',   title: '94 architecture rules', desc: 'Distilled from 23 production databases across 9 domains, applied as your schema is designed.' },
+  { icon: 'shield',   title: '7-dimension validator', desc: 'Naming, audit fields, indexes, money types, data preservation — scored, then auto-fixed.' },
+  { icon: 'file-code',title: 'SQL + PDF, ready to run', desc: 'A clean MySQL DDL file plus documentation explaining every table and decision.' },
+  { icon: 'lock',     title: 'Compliance built in', desc: 'Soft deletes, immutable transaction logs, archive mirrors, GST columns where they belong.' },
 ]
 
 const DOMAINS = [
-  { name: 'Financial & Ledger', icon: '💳' },
-  { name: 'HR & Payroll', icon: '👥' },
-  { name: 'E-Commerce Marketplace', icon: '🛍️' },
-  { name: 'Multi-Tenant SaaS', icon: '☁️' },
-  { name: 'Healthcare & EHR', icon: '🏥' },
-  { name: 'IoT & Real-time Logs', icon: '📡' },
-  { name: 'Real Estate & Properties', icon: '🏢' },
-  { name: 'Logistics & Supply Chain', icon: '🚚' },
+  ['🏦', 'Financial & ledger'], ['👥', 'HR & payroll'], ['🛒', 'E-commerce'],
+  ['☁️', 'Multi-tenant SaaS'], ['🏥', 'Healthcare & EHR'], ['📡', 'IoT & telemetry'],
+  ['🏢', 'Real estate'], ['🚚', 'Logistics'], ['🎓', 'E-learning'],
+]
+
+const STEPS = [
+  { n: '01', title: 'Describe it', body: 'Say what you\'re building in plain English. No schema jargon required.' },
+  { n: '02', title: 'Review the blueprint', body: 'BaseAI asks a few sharp questions, then proposes the modules and tables.' },
+  { n: '03', title: 'Get the schema', body: 'Confirm, and it generates the validated DDL and a PDF you can hand to a dev.' },
 ]
 
 export default function Landing() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-200 selection:bg-indigo-500/30 selection:text-indigo-200">
-      {/* Background radial glow */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/3 -right-40 w-[30rem] h-[30rem] bg-purple-600/10 rounded-full blur-3xl"></div>
+    <div className="relative min-h-screen bg-bg text-ink grain overflow-hidden">
+      {/* ambient backdrop */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute left-1/2 top-[-14rem] h-[34rem] w-[46rem] -translate-x-1/2 rounded-full bg-accent/[0.13] blur-[130px] animate-drift" />
+        <div className="absolute right-[-12rem] top-1/3 h-[24rem] w-[24rem] rounded-full bg-[#3a7bd5]/[0.07] blur-[120px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(60rem_40rem_at_50%_-10%,rgba(139,124,248,0.06),transparent)]" />
       </div>
 
       <div className="relative z-10">
-        {/* Navigation */}
-        <nav className="border-b border-slate-800/80 backdrop-blur-xl sticky top-0 bg-[#090d16]/80 px-6 py-4 z-50">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 font-bold text-white text-lg">
-                S
-              </div>
-              <span className="font-extrabold text-white text-lg tracking-tight">
-                Base<span className="gradient-text">AI</span>
-              </span>
-            </div>
+        <Nav navigate={navigate} />
 
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/chat')}
-                className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Launch Workbench →
-              </button>
-            </div>
-          </div>
-        </nav>
-
-        {/* Hero Section */}
-        <section className="max-w-5xl mx-auto px-6 pt-20 pb-16 text-center">
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 glass-panel rounded-full text-indigo-300 text-xs font-medium mb-8 border border-indigo-500/20">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Engineered with 109 Rules · 23 Enterprise Blueprints Analysed
+        {/* ── Hero ── */}
+        <section className="mx-auto max-w-3xl px-6 pt-24 pb-14 text-center">
+          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3 py-1 text-[12.5px] text-ink-muted">
+            <span className="size-1.5 rounded-full bg-ok shadow-[0_0_8px_theme(colors.ok.DEFAULT)]" />
+            94 rules · 23 production schemas analysed
           </div>
 
-          <h1 className="text-5xl sm:text-6xl font-extrabold text-white mb-8 tracking-tight leading-[1.15]">
-            Architect Production-Grade <br className="hidden sm:inline" />
-            <span className="gradient-text">Database Schemas</span> in Seconds
+          <h1 className="text-[2.6rem] font-semibold leading-[1.06] tracking-tightest sm:text-[3.4rem]">
+            Production-grade database schemas,
+            <br className="hidden sm:block" />{' '}
+            <span className="text-gradient">designed in a conversation.</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed font-normal">
-            Transform high-level requirements into enterprise-ready SQL databases. Complete with normalization, foreign key constraints, audit compliance, and PDF documentation.
+          <p className="mx-auto mt-6 max-w-xl text-[16.5px] leading-relaxed text-ink-muted">
+            Describe your system in plain English. BaseAI asks what it needs, plans the
+            architecture, and hands back a validated MySQL schema with documentation.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button
-              onClick={() => navigate('/chat')}
-              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-2xl text-base shadow-xl shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button
+              size="lg" variant="primary" onClick={() => navigate('/chat')}
+              iconRight={<Icon name="arrow-right" className="size-4" />}
+              className="w-full sm:w-auto"
             >
-              Start Designing Free →
-            </button>
+              Start designing
+            </Button>
+            <Button
+              as="a" href="#how" size="lg" variant="ghost"
+              iconRight={<Icon name="chevron-down" className="size-4" />}
+            >
+              See how it works
+            </Button>
           </div>
+
+          <PreviewFrame />
         </section>
 
-        {/* Features Showcase */}
-        <section className="max-w-6xl mx-auto px-6 py-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {FEATURES.map((f, i) => (
+        {/* ── Features ── */}
+        <section className="mx-auto max-w-5xl px-6 py-16">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.map((f) => (
               <div
-                key={i}
-                className="glass-card p-6 rounded-2xl border border-slate-800/80 hover:border-indigo-500/40 transition-all group"
+                key={f.title}
+                className="group rounded-xl border border-line bg-bg-raised p-5 shadow-inset-hl transition-[border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-line-strong"
               >
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                  {f.icon}
+                <div className="mb-4 grid size-9 place-items-center rounded-lg border border-line bg-white/[0.03] text-accent-hi">
+                  <Icon name={f.icon} className="size-[18px]" />
                 </div>
-                <h3 className="font-bold text-white mb-2 text-base">
-                  {f.title}
-                </h3>
-                <p className="text-slate-400 text-xs leading-relaxed font-normal">
-                  {f.desc}
-                </p>
+                <h3 className="text-[14.5px] font-medium text-ink">{f.title}</h3>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-ink-dim">{f.desc}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Domains List */}
-        <section className="border-t border-slate-800/60 py-16">
-          <div className="max-w-5xl mx-auto px-6 text-center">
-            <h2 className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-6">
-              Supported Industry Domains
-            </h2>
-            <div className="flex flex-wrap justify-center gap-3">
-              {DOMAINS.map((d, i) => (
-                <button
-                  key={i}
-                  onClick={() => navigate('/chat')}
-                  className="glass-panel px-4 py-2 rounded-xl text-slate-300 hover:text-white text-xs font-medium flex items-center gap-2 hover:border-indigo-500/40 transition-all hover:scale-[1.03]"
-                >
-                  <span>{d.icon}</span>
-                  <span>{d.name}</span>
-                </button>
-              ))}
-            </div>
+        {/* ── How it works ── */}
+        <section id="how" className="mx-auto max-w-5xl px-6 py-16">
+          <p className="label mb-8 text-center">How it works</p>
+          <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-3">
+            {STEPS.map((s) => (
+              <div key={s.n} className="bg-bg-raised p-7">
+                <span className="font-mono text-[13px] text-accent-hi">{s.n}</span>
+                <h3 className="mt-3 text-[15px] font-medium text-ink">{s.title}</h3>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-ink-dim">{s.body}</p>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="border-t border-slate-800/80 py-8 text-center bg-[#060911]">
-          <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <span>BaseAI Engine v2.4</span>
-              <span>•</span>
-              <span>109 Verified Rules</span>
-            </div>
-            <p className="text-slate-500 text-xs">
-              © {new Date().getFullYear()} BaseAI Inc. Enterprise Database Architect Engine.
+        {/* ── Domains ── */}
+        <section className="mx-auto max-w-4xl px-6 py-14 text-center">
+          <p className="label mb-6">Built for real domains</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {DOMAINS.map(([icon, name]) => (
+              <button
+                key={name}
+                onClick={() => navigate('/chat')}
+                className="inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3.5 py-1.5 text-[13px] text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
+              >
+                <span className="text-[13px]">{icon}</span>
+                {name}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Trust strip ── */}
+        <section className="mx-auto max-w-4xl px-6 py-14">
+          <div className="grid grid-cols-1 divide-y divide-line rounded-2xl border border-line bg-bg-raised sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            {[
+              ['80–120', 'tables in a full enterprise schema'],
+              ['A–F', 'quality grade on every generation'],
+              ['1 PDF', 'explaining every table and rule applied'],
+            ].map(([big, small]) => (
+              <div key={small} className="px-6 py-7 text-center">
+                <div className="text-2xl font-semibold tracking-tight text-ink">{big}</div>
+                <div className="mt-1 text-[12.5px] text-ink-dim">{small}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── CTA ── */}
+        <section className="mx-auto max-w-3xl px-6 pb-24 pt-10">
+          <div className="relative overflow-hidden rounded-2xl border border-line bg-bg-raised p-10 text-center shadow-inset-hl">
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-24 mx-auto h-48 w-3/4 rounded-full bg-accent/10 blur-3xl" />
+            <h2 className="relative text-2xl font-semibold tracking-tight">Design your first schema</h2>
+            <p className="relative mx-auto mt-2 max-w-md text-[14px] text-ink-muted">
+              No setup. Describe the system, review the plan, download the SQL.
             </p>
+            <Button
+              size="lg" variant="primary" onClick={() => navigate('/chat')}
+              iconRight={<Icon name="arrow-right" className="size-4" />}
+              className="relative mt-6"
+            >
+              Open the Workbench
+            </Button>
+          </div>
+        </section>
+
+        <footer className="hairline-t">
+          <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-6 py-8 text-[12.5px] text-ink-faint sm:flex-row">
+            <div className="flex items-center gap-2">
+              <Logo className="size-5" />
+              <span>BaseAI Engine · 94 verified rules</span>
+            </div>
+            <span>© {new Date().getFullYear()} BaseAI. Enterprise database architecture.</span>
           </div>
         </footer>
+      </div>
+    </div>
+  )
+}
+
+/* ── pieces ─────────────────────────────────────────────── */
+
+function Nav({ navigate }) {
+  return (
+    <nav className="sticky top-0 z-50 border-b border-line/70 bg-bg/70 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5">
+        <button onClick={() => navigate('/')} className="flex items-center gap-2.5">
+          <Logo className="size-7" />
+          <span className="text-[15px] font-semibold tracking-tight">BaseAI</span>
+        </button>
+        <div className="flex items-center gap-1.5">
+          <Button size="sm" variant="ghost" onClick={() => navigate('/chat')}>Sign in</Button>
+          <Button
+            size="sm" variant="primary" onClick={() => navigate('/chat')}
+            iconRight={<Icon name="arrow-right" className="size-3.5" />}
+          >
+            Launch Workbench
+          </Button>
+        </div>
+      </div>
+    </nav>
+  )
+}
+
+// A built-from-divs mini Workbench — ages better than a screenshot.
+function PreviewFrame() {
+  return (
+    <div className="relative mx-auto mt-16 max-w-3xl">
+      <div aria-hidden className="pointer-events-none absolute -inset-x-8 -top-10 h-40 rounded-full bg-accent/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-2xl border border-line bg-bg-raised shadow-pop">
+        {/* window bar */}
+        <div className="flex items-center gap-2 border-b border-line px-4 py-2.5">
+          <span className="size-2.5 rounded-full bg-white/10" />
+          <span className="size-2.5 rounded-full bg-white/10" />
+          <span className="size-2.5 rounded-full bg-white/10" />
+          <span className="ml-3 text-[11px] text-ink-faint">baseai.workbench</span>
+        </div>
+
+        <div className="grid grid-cols-[1fr] gap-0 sm:grid-cols-[1fr_260px]">
+          {/* chat */}
+          <div className="space-y-4 p-5 text-left">
+            <div className="flex justify-end">
+              <div className="max-w-[80%] rounded-2xl border border-line bg-white/[0.05] px-3.5 py-2 text-[12.5px] text-ink">
+                Multi-tenant B2B billing with usage-based tiers and Stripe payouts
+              </div>
+            </div>
+            <div className="flex gap-2.5">
+              <Logo className="size-6 shrink-0" />
+              <div className="space-y-2 text-[12.5px] leading-relaxed text-ink-muted">
+                <p>Got it — a SaaS billing engine. A few things I need:</p>
+                <p className="text-ink">1. Per-tenant plans, or global plans with tenant overrides?</p>
+                <p className="text-ink">2. Do payouts need a reconciliation ledger?</p>
+              </div>
+            </div>
+          </div>
+          {/* side panel */}
+          <div className="hidden border-l border-line bg-bg p-4 sm:block">
+            <p className="label mb-3">Blueprint</p>
+            {['tenant_header_all', 'subscription_header_all', 'usage_transaction_all', 'payout_ledger_transaction_all'].map((t) => (
+              <div key={t} className="mb-1.5 flex items-center gap-2 text-[11.5px]">
+                <Icon name="database" className="size-3 text-accent-hi" />
+                <span className="font-mono text-ink-muted">{t}</span>
+              </div>
+            ))}
+            <div className="mt-4 rounded-lg border border-ok-line bg-ok-bg px-2.5 py-2 text-[11.5px] text-ok">
+              Validation 92 / 100 · Grade A
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

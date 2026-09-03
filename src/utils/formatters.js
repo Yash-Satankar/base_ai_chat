@@ -1,18 +1,31 @@
 // src/utils/formatters.js
 
+export const STAGE_STEPS = [
+  { key: 'describe',  label: 'Describe',  match: ['idle', 'initial'] },
+  { key: 'clarify',   label: 'Clarify',   match: ['clarifying'] },
+  { key: 'blueprint', label: 'Blueprint', match: ['compiling', 'blueprint', 'confirmed'] },
+  { key: 'generate',  label: 'Generate',  match: ['generating', 'fixing'] },
+  { key: 'done',      label: 'Done',      match: ['complete'] },
+]
+
+export function stageStepIndex(stage) {
+  const i = STAGE_STEPS.findIndex(s => s.match.includes(stage))
+  return i === -1 ? 0 : i
+}
+
 export function formatStage(stage) {
   const map = {
     idle:        'Ready',
     initial:     'Getting started',
     clarifying:  'Gathering requirements',
-    compiling:   'Designing blueprint...',
+    compiling:   'Designing blueprint',
     blueprint:   'Blueprint ready',
     confirmed:   'Blueprint confirmed',
-    generating:  'Generating schema...',
-    fixing:      'Fixing issues...',
-    complete:    'Complete ✓',
+    generating:  'Generating schema',
+    fixing:      'Refining schema',
+    complete:    'Complete',
   }
-  return map[stage] || stage
+  return map[stage] || 'Ready'
 }
 
 export function formatDomain(domain) {
@@ -21,38 +34,57 @@ export function formatDomain(domain) {
     .replace(/\b\w/g, c => c.toUpperCase())
 }
 
-export function formatPriority(priority) {
-  const colors = {
-    critical: 'text-red-400 bg-red-400/10',
-    high:     'text-orange-400 bg-orange-400/10',
-    medium:   'text-blue-400 bg-blue-400/10',
-    low:      'text-green-400 bg-green-400/10',
-  }
-  return colors[priority] || 'text-gray-400 bg-gray-400/10'
+export function domainIcon(domain) {
+  const d = (domain || '').toLowerCase()
+  if (/(hospital|health|medical|ehr|clinic|patient)/.test(d)) return '🏥'
+  if (/(finance|bank|ledger|payment|fintech|wallet)/.test(d)) return '🏦'
+  if (/(school|educat|learning|lms|course)/.test(d)) return '🎓'
+  if (/(logistic|deliver|fleet|shipment|supply)/.test(d)) return '🚚'
+  if (/(commerce|shop|marketplace|retail|order)/.test(d)) return '🛒'
+  if (/(hotel|travel|estate|property|realty)/.test(d)) return '🏢'
+  if (/(saas|tenant|subscription|workspace)/.test(d)) return '☁️'
+  if (/(hr|payroll|employee|recruit)/.test(d)) return '👥'
+  if (/(iot|sensor|device|telemetry|realtime|real-time)/.test(d)) return '📡'
+  return '🗄️'
 }
 
 export function formatTimestamp(iso) {
-  return new Date(iso).toLocaleTimeString('en-IN', {
-    hour:   '2-digit',
-    minute: '2-digit',
-  })
+  try {
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return ''
+  }
 }
 
+// grade / score → palette text classes (see tailwind.config.js)
 export function gradeColor(grade) {
-  const map = {
-    A: 'text-green-400',
-    B: 'text-blue-400',
-    C: 'text-yellow-400',
-    D: 'text-orange-400',
-    F: 'text-red-400',
-  }
-  return map[grade] || 'text-gray-400'
+  return {
+    A: 'text-ok',
+    B: 'text-accent-hi',
+    C: 'text-warn',
+    D: 'text-warn',
+    F: 'text-danger',
+  }[grade] || 'text-ink-dim'
 }
 
 export function scoreColor(score) {
-  if (score >= 90) return 'text-green-400'
-  if (score >= 80) return 'text-blue-400'
-  if (score >= 70) return 'text-yellow-400'
-  if (score >= 60) return 'text-orange-400'
-  return 'text-red-400'
+  if (score >= 85) return 'text-ok'
+  if (score >= 70) return 'text-accent-hi'
+  if (score >= 55) return 'text-warn'
+  return 'text-danger'
+}
+
+export function scoreBar(score) {
+  if (score >= 85) return 'bg-ok'
+  if (score >= 70) return 'bg-accent'
+  if (score >= 55) return 'bg-warn'
+  return 'bg-danger'
+}
+
+export function scoreHex(score) {
+  if (!score && score !== 0) return '#71717a'
+  if (score >= 85) return '#3ecf8e'
+  if (score >= 70) return '#a89bff'
+  if (score >= 55) return '#f5a623'
+  return '#f56565'
 }

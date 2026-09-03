@@ -1,68 +1,40 @@
 // src/components/schema/DownloadButtons.jsx
-
+import React from 'react'
 import { conversationApi } from '../../api/client'
+import Icon from '../ui/Icon'
 
 export default function DownloadButtons({ sessionId }) {
   if (!sessionId) return null
 
-  const handleDownload = (type) => {
+  const open = type => {
     const url = type === 'sql'
       ? conversationApi.downloadSql(sessionId)
       : conversationApi.downloadPdf(sessionId)
-
-    // Open in new tab — browser handles download
     window.open(url, '_blank')
   }
 
   return (
-    <div className="flex flex-col gap-2 w-full">
-      <p className="text-xs text-slate-400 font-medium">
-        Your files are ready:
-      </p>
-
-      <div className="flex gap-2">
-        <DownloadBtn
-          onClick={() => handleDownload('sql')}
-          icon="📄"
-          label="Download SQL"
-          sublabel="Run directly in MySQL"
-          color="blue"
-        />
-        <DownloadBtn
-          onClick={() => handleDownload('pdf')}
-          icon="📋"
-          label="Download PDF"
-          sublabel="Complete documentation"
-          color="purple"
-        />
-      </div>
+    <div className="grid grid-cols-2 gap-2">
+      <Btn onClick={() => open('sql')} icon="file-code" label="schema.sql" sub="Run in MySQL" />
+      <Btn onClick={() => open('pdf')} icon="file-text" label="docs.pdf" sub="Full documentation" />
     </div>
   )
 }
 
-
-function DownloadBtn({ onClick, icon, label, sublabel, color }) {
-  const colors = {
-    blue:   'border-blue-500/40 hover:bg-blue-500/10 hover:border-blue-500/60',
-    purple: 'border-purple-500/40 hover:bg-purple-500/10 hover:border-purple-500/60',
-  }
-
+function Btn({ onClick, icon, label, sub }) {
   return (
     <button
       onClick={onClick}
-      className={`flex-1 flex items-center gap-3 px-3 py-2.5
-                  rounded-lg border bg-slate-900/50
-                  transition-all duration-200 text-left group
-                  ${colors[color]}`}
+      className="group flex items-center gap-3 rounded-xl border border-line bg-bg-raised px-3 py-2.5 text-left shadow-inset-hl transition-[border-color,background-color] duration-150 hover:border-line-strong hover:bg-white/[0.02]"
     >
-      <span className="text-xl">{icon}</span>
-      <div>
-        <p className="text-xs font-medium text-slate-200
-                      group-hover:text-white transition-colors">
-          {label}
-        </p>
-        <p className="text-xs text-slate-500">{sublabel}</p>
-      </div>
+      <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-line bg-white/[0.03] text-accent-hi">
+        <Icon name={icon} className="size-[16px]" />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-[12.5px] font-medium text-ink">{label}</span>
+        <span className="block truncate text-[11px] text-ink-dim">{sub}</span>
+      </span>
+      <Icon name="download" className="ml-auto size-3.5 shrink-0 text-ink-faint transition-colors group-hover:text-ink-muted" />
     </button>
   )
 }

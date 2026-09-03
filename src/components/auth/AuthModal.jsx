@@ -1,153 +1,127 @@
-/* src/components/auth/AuthModal.jsx
-   Glassmorphic Auth Modal for Login & Registration
-*/
-
+// src/components/auth/AuthModal.jsx
 import React, { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import './AuthModal.css'
+import Button from '../ui/Button'
+import Icon from '../ui/Icon'
+import Logo from '../ui/Logo'
 
 export default function AuthModal({ onClose }) {
   const { login, register, loading, error } = useAuth()
   const [mode, setMode] = useState('login')
   const [form, setForm] = useState({ email: '', displayName: '', password: '' })
-  const [showPassword, setShowPassword] = useState(false)
+  const [showPw, setShowPw] = useState(false)
   const [localError, setLocalError] = useState(null)
 
-  const handleSubmit = async (e) => {
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  const submit = async e => {
     e.preventDefault()
     setLocalError(null)
-
     let result
     if (mode === 'login') {
       result = await login(form.email, form.password)
     } else {
-      if (!form.displayName.trim()) {
-        setLocalError('Display name is required.')
-        return
-      }
+      if (!form.displayName.trim()) return setLocalError('Enter a display name.')
       result = await register(form.email, form.displayName, form.password)
     }
-
-    if (result.success) {
-      onClose()
-    } else {
-      setLocalError(result.error)
-    }
+    if (result?.success) onClose()
+    else setLocalError(result?.error || 'Something went wrong.')
   }
 
-  const displayedError = localError || error
+  const err = localError || error
 
   return (
-    <div className="auth-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="auth-modal">
-        {/* Close button */}
-        <button className="auth-modal__close" onClick={onClose} aria-label="Close">✕</button>
-
-        {/* Header */}
-        <div className="auth-modal__header">
-          <div className="auth-modal__logo">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white text-sm shadow-md">
-              S
-            </div>
-            <span className="auth-modal__logo-text">Base<span className="gradient-text">AI</span></span>
+    <div
+      className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in"
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-[400px] rounded-2xl border border-line bg-bg-elevated p-6 shadow-pop animate-scale-in">
+        <div className="mb-5 flex items-start justify-between">
+          <div className="flex items-center gap-2.5">
+            <Logo className="size-8" />
+            <span className="text-[15px] font-semibold tracking-tight">BaseAI</span>
           </div>
-          <h2 className="auth-modal__title">
-            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-          </h2>
-          <p className="auth-modal__subtitle">
-            {mode === 'login'
-              ? 'Sign in to access your enterprise database designs.'
-              : 'Architect production-ready schemas with 109 rules.'}
-          </p>
+          <button
+            onClick={onClose}
+            className="grid size-7 place-items-center rounded-md text-ink-dim transition-colors hover:bg-white/[0.06] hover:text-ink"
+            aria-label="Close"
+          >
+            <Icon name="x" className="size-4" />
+          </button>
         </div>
 
-        {/* Error banner */}
-        {displayedError && (
-          <div className="auth-modal__error">
-            <span>⚠</span> {displayedError}
+        <h2 className="text-[19px] font-semibold tracking-tight">
+          {mode === 'login' ? 'Welcome back' : 'Create your account'}
+        </h2>
+        <p className="mt-1 text-[13px] text-ink-muted">
+          {mode === 'login'
+            ? 'Sign in to keep your project history and versions.'
+            : 'Save your schemas, track quality scores, and pick up where you left off.'}
+        </p>
+
+        {err && (
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-danger-line bg-danger-bg px-3 py-2 text-[12.5px] text-danger">
+            <Icon name="x" className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.2} />
+            {err}
           </div>
         )}
 
-        {/* Form */}
-        <form className="auth-modal__form" onSubmit={handleSubmit}>
+        <form onSubmit={submit} className="mt-5 space-y-3.5">
           {mode === 'register' && (
-            <div className="auth-field">
-              <label htmlFor="auth-name">Display Name</label>
-              <input
-                id="auth-name"
-                type="text"
-                placeholder="e.g. Alex Morgan"
-                value={form.displayName}
-                onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))}
-                required
-              />
-            </div>
+            <Field label="Display name" id="auth-name">
+              <input id="auth-name" className="field" placeholder="Alex Morgan" value={form.displayName} onChange={set('displayName')} required />
+            </Field>
           )}
-
-          <div className="auth-field">
-            <label htmlFor="auth-email">Work Email</label>
-            <input
-              id="auth-email"
-              type="email"
-              placeholder="you@company.com"
-              value={form.email}
-              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              required
-            />
-          </div>
-
-          <div className="auth-field relative">
-            <label htmlFor="auth-password">Password</label>
+          <Field label="Email" id="auth-email">
+            <input id="auth-email" type="email" className="field" placeholder="you@company.com" value={form.email} onChange={set('email')} required />
+          </Field>
+          <Field label="Password" id="auth-pw">
             <div className="relative">
               <input
-                id="auth-password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder={mode === 'register' ? 'Min 6 characters' : '••••••••'}
+                id="auth-pw"
+                type={showPw ? 'text' : 'password'}
+                className="field pr-10"
+                placeholder={mode === 'register' ? 'At least 6 characters' : '••••••••'}
                 value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                required
+                onChange={set('password')}
                 minLength={6}
+                required
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-200"
+                onClick={() => setShowPw(v => !v)}
+                className="absolute right-2.5 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded text-ink-dim transition-colors hover:text-ink"
+                aria-label={showPw ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? 'Hide' : 'Show'}
+                <Icon name={showPw ? 'eye-off' : 'eye'} className="size-4" />
               </button>
             </div>
-          </div>
+          </Field>
 
-          <button
-            className="auth-modal__submit"
-            type="submit"
-            disabled={loading}
-          >
-            {loading
-              ? 'Processing…'
-              : mode === 'login' ? 'Sign In' : 'Create Free Account'}
-          </button>
+          <Button type="submit" variant="primary" size="lg" disabled={loading} className="w-full">
+            {loading ? 'Working…' : mode === 'login' ? 'Sign in' : 'Create account'}
+          </Button>
         </form>
 
-        {/* Mode toggle */}
-        <div className="auth-modal__footer">
-          {mode === 'login' ? (
-            <>
-              Don't have an account?{' '}
-              <button className="auth-toggle" onClick={() => setMode('register')}>
-                Register free
-              </button>
-            </>
-          ) : (
-            <>
-              Already registered?{' '}
-              <button className="auth-toggle" onClick={() => setMode('login')}>
-                Sign in
-              </button>
-            </>
-          )}
-        </div>
+        <p className="mt-4 text-center text-[12.5px] text-ink-dim">
+          {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+          <button
+            onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setLocalError(null) }}
+            className="font-medium text-accent-hi hover:underline"
+          >
+            {mode === 'login' ? 'Sign up' : 'Sign in'}
+          </button>
+        </p>
       </div>
+    </div>
+  )
+}
+
+function Field({ label, id, children }) {
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="label block">{label}</label>
+      {children}
     </div>
   )
 }

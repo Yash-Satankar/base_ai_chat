@@ -1,117 +1,64 @@
 // src/components/schema/ValidationScore.jsx
-
 import React from 'react'
-import { gradeColor, scoreColor } from '../../utils/formatters'
+import { gradeColor, scoreColor, scoreBar } from '../../utils/formatters'
 import Badge from '../ui/Badge'
+import Icon from '../ui/Icon'
 
 export default function ValidationScore({ validation }) {
   if (!validation) return null
 
   const { score, grade, total_issues, issues } = validation
   const passed = validation.passed ?? score >= 60
-
-  // The default API contract returns a "lean" validation object — just the
-  // headline numbers, no per-rule issue list. Detect that so we never
-  // render "undefined issues" or a misleading "100% compliant" banner for
-  // a schema whose breakdown was simply not included in this view.
   const hasBreakdown = Array.isArray(issues)
-  const issueList = hasBreakdown ? issues : []
-  const issueCount = total_issues ?? issueList.length
+  const list = hasBreakdown ? issues : []
+  const count = total_issues ?? list.length
 
   return (
-    <div className="w-full rounded-2xl border border-slate-800 bg-[#090d16] overflow-hidden glass-panel shadow-lg">
-      {/* Score Header */}
-      <div className={`px-4.5 py-3.5 border-b border-slate-800/80 ${passed ? 'bg-emerald-500/5' : 'bg-rose-500/5'}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
-            <div className="text-center">
-              <div className={`text-3xl font-extrabold tracking-tight ${scoreColor(score)}`}>
-                {score}
-              </div>
-              <div className="text-[10px] text-slate-500 font-semibold uppercase">/ 100 Score</div>
+    <div className="w-full overflow-hidden rounded-xl border border-line bg-bg-raised shadow-inset-hl">
+      <div className="border-b border-line px-4 py-3.5">
+        <div className="flex items-center gap-4">
+          <div className="text-center">
+            <div className={`text-[26px] font-semibold leading-none tracking-tight tabular-nums ${scoreColor(score)}`}>
+              {score}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className={`text-lg font-extrabold ${gradeColor(grade)}`}>
-                  Grade {grade}
-                </span>
-                <Badge variant={passed ? 'success' : 'critical'}>
-                  {passed ? '✓ PASSED' : 'Action Required'}
-                </Badge>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5 font-medium">
-                {hasBreakdown
-                  ? `${issueCount} compliance issue${issueCount !== 1 ? 's' : ''} evaluated`
-                  : 'Headline quality score'}
-              </p>
-            </div>
+            <div className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-faint">/ 100</div>
           </div>
-
-          {/* Animated score bar */}
-          <div className="w-28 hidden sm:block">
-            <div className="h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700/60">
-              <div
-                className={`h-full rounded-full transition-all duration-700 ${
-                  score >= 90
-                    ? 'bg-emerald-500'
-                    : score >= 80
-                    ? 'bg-indigo-500'
-                    : score >= 70
-                    ? 'bg-amber-500'
-                    : 'bg-rose-500'
-                }`}
-                style={{ width: `${score}%` }}
-              />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              {grade && <span className={`text-[15px] font-semibold ${gradeColor(grade)}`}>Grade {grade}</span>}
+              <Badge variant={passed ? 'success' : 'critical'}>{passed ? 'Passed' : 'Action needed'}</Badge>
             </div>
-            <p className="text-[11px] font-semibold text-slate-400 mt-1 text-right">
-              {score}% Rating
+            <p className="mt-1 text-[12px] text-ink-dim">
+              {hasBreakdown ? `${count} compliance check${count !== 1 ? 's' : ''} evaluated` : 'Headline quality score'}
             </p>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+              <div className={`h-full rounded-full transition-[width] duration-700 ${scoreBar(score)}`} style={{ width: `${score}%` }} />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Issues list (only when the breakdown is included) */}
-      {hasBreakdown && issueList.length > 0 && (
-        <div className="px-4.5 py-3.5 space-y-2.5">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-            Rules Assessment Breakdown
-          </p>
-          {issueList.map((issue, i) => (
-            <IssueRow key={i} issue={issue} />
+      {hasBreakdown && list.length > 0 && (
+        <div className="space-y-2 px-4 py-3.5">
+          <p className="label">Findings</p>
+          {list.map((issue, i) => (
+            <div key={i} className="flex items-start gap-2.5 rounded-lg border border-line bg-white/[0.02] p-2.5 text-[12px]">
+              <Badge variant={issue.severity || 'medium'} className="mt-0.5 shrink-0 capitalize">{issue.severity}</Badge>
+              <div className="min-w-0 space-y-0.5">
+                <p className="text-ink">{issue.issue}</p>
+                <p className="text-[11.5px] leading-relaxed text-ink-dim">Fix — {issue.suggestion}</p>
+              </div>
+            </div>
           ))}
         </div>
       )}
 
-      {/* Zero issues — only assert full compliance when we actually have
-          the breakdown to back it up. */}
-      {hasBreakdown && issueList.length === 0 && (
-        <div className="px-4.5 py-3.5 text-center bg-emerald-500/5 border-t border-emerald-500/10">
-          <p className="text-xs font-semibold text-emerald-400">
-            ✓ Excellent — Schema complies with 100% of architectural rules!
-          </p>
+      {hasBreakdown && list.length === 0 && (
+        <div className="flex items-center justify-center gap-2 border-t border-ok-line bg-ok-bg py-2.5 text-[12px] font-medium text-ok">
+          <Icon name="circle-check" className="size-3.5" />
+          Complies with every architectural rule
         </div>
       )}
-    </div>
-  )
-}
-
-function IssueRow({ issue }) {
-  const severityVariant = {
-    critical: 'critical',
-    high:     'high',
-    medium:   'medium',
-    low:      'low',
-  }[issue.severity] || 'default'
-
-  return (
-    <div className="flex items-start gap-2.5 text-xs p-2 rounded-xl bg-slate-900/60 border border-slate-800/80">
-      <Badge variant={severityVariant} className="shrink-0 mt-0.5">
-        {issue.severity}
-      </Badge>
-      <div className="space-y-0.5">
-        <p className="text-slate-200 font-medium">{issue.issue}</p>
-        <p className="text-slate-400 text-[11px] leading-relaxed">💡 Fix: {issue.suggestion}</p>
-      </div>
     </div>
   )
 }

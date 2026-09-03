@@ -1,16 +1,18 @@
 // src/pages/Chat.jsx
-
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ChatWindow from '../components/chat/ChatWindow'
 import InputBar from '../components/chat/InputBar'
 import useConversation from '../hooks/useConversation'
-import { formatStage } from '../utils/formatters'
+import { STAGE_STEPS, stageStepIndex } from '../utils/formatters'
 import Spinner from '../components/ui/Spinner'
+import Button from '../components/ui/Button'
+import Icon from '../components/ui/Icon'
 import GenerationProgress from '../components/ui/GenerationProgress'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from '../components/auth/AuthModal'
 import ProjectsSidebar from '../components/projects/ProjectsSidebar'
+import Logo from '../components/ui/Logo'
 import { projectsApi } from '../api/client'
 
 export default function Chat() {
@@ -21,48 +23,24 @@ export default function Chat() {
   const [sidebarKey, setSidebarKey] = useState(0)
 
   const {
-    sessionId,
-    messages,
-    stage,
-    blueprint,
-    validation,
-    metadata,
-    genSummary,
-    isLoading,
-    messagesEndRef,
-    startSession,
-    loadExistingVersion,
-    sendMessage,
-    reset,
-    // Job polling
-    jobId,
-    jobStatus,
-    progress,
-    isPolling,
+    sessionId, messages, stage, blueprint, validation, metadata, genSummary,
+    isLoading, messagesEndRef, startSession, loadExistingVersion, sendMessage,
+    reset, jobId, jobStatus, progress, isPolling,
   } = useConversation()
 
-  // Auto-start session on mount
   useEffect(() => {
-    const init = async () => {
-      await startSession()
-      setStarting(false)
-    }
+    const init = async () => { await startSession(); setStarting(false) }
     init()
   }, [])
 
-  // Auto-refresh sidebar list when status becomes COMPLETE
   useEffect(() => {
-    if (stage === 'complete') {
-      setSidebarKey(prev => prev + 1)
-    }
+    if (stage === 'complete') setSidebarKey(p => p + 1)
   }, [stage])
 
   const handleNewSession = async () => {
-    reset()
-    setStarting(true)
+    reset(); setStarting(true)
     await startSession()
-    setStarting(false)
-    setSidebarKey(prev => prev + 1)
+    setStarting(false); setSidebarKey(p => p + 1)
   }
 
   const handleSelectProjectVersion = async (projectId, versionNumber) => {
@@ -78,72 +56,56 @@ export default function Chat() {
   }
 
   const isGenerating = stage === 'generating' || isPolling
+  const busy = isLoading || isPolling
 
   return (
-    <div className="h-screen flex flex-col bg-[#090d16] text-slate-200">
+    <div className="flex h-screen flex-col bg-bg text-ink">
       {/* ── Header ── */}
-      <header className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-slate-800/80 bg-[#090d16]/90 backdrop-blur-xl shrink-0 z-30 shadow-md">
+      <header className="z-30 flex shrink-0 items-center justify-between gap-4 border-b border-line bg-bg/80 px-4 py-2.5 backdrop-blur-xl sm:px-5">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/')}
-            className="text-slate-400 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-800/60"
+            className="grid size-7 place-items-center rounded-lg text-ink-dim transition-colors hover:bg-white/[0.05] hover:text-ink"
+            title="Home"
           >
-            ← Home
+            <Icon name="arrow-right" className="size-4 rotate-180" />
           </button>
-          <span className="text-slate-700">|</span>
+          <span className="h-4 w-px bg-line" />
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white text-xs shadow-sm">
-              S
-            </div>
-            <span className="font-extrabold text-white text-sm tracking-tight hidden sm:inline">
-              Base<span className="gradient-text">AI</span> Workbench
-            </span>
+            <Logo className="size-6" />
+            <span className="hidden text-[13.5px] font-semibold tracking-tight sm:inline">Workbench</span>
           </div>
         </div>
 
-        {/* Stage indicator */}
+        <Stepper stage={stage} busy={busy} />
+
         <div className="flex items-center gap-2">
-          <StageIndicator stage={stage} isLoading={isLoading} isPolling={isPolling} />
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleNewSession}
-            disabled={isLoading || isPolling}
-            className="text-xs px-3 py-1.5 rounded-xl border border-slate-700/80 text-slate-300 hover:border-indigo-500/50 hover:text-white hover:bg-indigo-500/10 transition-all disabled:opacity-50 font-medium"
+          <Button
+            size="sm" variant="secondary" onClick={handleNewSession} disabled={busy}
+            iconLeft={<Icon name="plus" className="size-3.5" />}
           >
-            + New Design
-          </button>
-
-          <span className="text-slate-800">|</span>
-
+            <span className="hidden sm:inline">New design</span>
+          </Button>
           {isAuthenticated ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-indigo-300 font-semibold max-w-[100px] truncate bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-lg">
-                {user.displayName}
+            <>
+              <span className="hidden items-center gap-2 rounded-lg border border-line bg-white/[0.03] py-1 pl-1 pr-2.5 sm:flex">
+                <span className="grid size-6 place-items-center rounded-md bg-accent-bg text-[11px] font-semibold text-accent-hi">
+                  {(user?.displayName || '?').slice(0, 1).toUpperCase()}
+                </span>
+                <span className="max-w-[110px] truncate text-[12.5px] text-ink-muted">{user?.displayName}</span>
               </span>
-              <button
-                onClick={logout}
-                className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition-all"
-              >
-                Sign Out
-              </button>
-            </div>
+              <Button size="sm" variant="ghost" onClick={logout} title="Sign out">
+                <Icon name="log-out" className="size-4" />
+              </Button>
+            </>
           ) : (
-            <button
-              onClick={() => setShowAuthModal(true)}
-              className="text-xs px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.02]"
-            >
-              Sign In
-            </button>
+            <Button size="sm" variant="primary" onClick={() => setShowAuthModal(true)}>Sign in</Button>
           )}
         </div>
       </header>
 
-      {/* ── Main Workspace ── */}
+      {/* ── Workspace ── */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left projects sidebar */}
         <ProjectsSidebar
           key={sidebarKey}
           currentSessionId={sessionId}
@@ -151,14 +113,11 @@ export default function Chat() {
           onNewChat={handleNewSession}
         />
 
-        {/* Chat main area */}
-        <div className="flex flex-col flex-1 overflow-hidden bg-gradient-to-b from-[#090d16] to-[#0c1220]">
+        <div className="flex flex-1 flex-col overflow-hidden">
           {starting ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center space-y-3">
-                <Spinner size="lg" className="mx-auto text-indigo-500" />
-                <p className="text-slate-400 text-sm font-medium">Initializing Workbench...</p>
-              </div>
+            <div className="flex flex-1 flex-col items-center justify-center gap-3">
+              <Spinner size="lg" />
+              <p className="text-[13px] text-ink-dim">Opening your workbench…</p>
             </div>
           ) : (
             <ChatWindow
@@ -168,27 +127,14 @@ export default function Chat() {
               onQuickStart={sendMessage}
             />
           )}
-
-          <InputBar
-            onSend={sendMessage}
-            disabled={isLoading || starting || isPolling}
-            stage={stage}
-          />
+          <InputBar onSend={sendMessage} disabled={busy || starting} stage={stage} />
         </div>
 
-        {/* ── Right sidebar ── */}
-        <aside className="hidden lg:flex flex-col w-80 border-l border-slate-800/80 bg-[#090d16]/70 overflow-y-auto shrink-0 z-10 backdrop-blur-md">
+        <aside className="hidden w-[320px] shrink-0 flex-col overflow-hidden border-l border-line bg-bg-raised lg:flex">
           <ContextPanel
-            stage={stage}
-            blueprint={blueprint}
-            validation={validation}
-            genSummary={genSummary}
-            sessionId={sessionId}
-            metadata={metadata}
-            jobId={jobId}
-            jobStatus={jobStatus}
-            progress={progress}
-            isGenerating={isGenerating}
+            stage={stage} blueprint={blueprint} validation={validation}
+            genSummary={genSummary} metadata={metadata}
+            jobId={jobId} jobStatus={jobStatus} progress={progress} isGenerating={isGenerating}
           />
         </aside>
       </div>
@@ -198,188 +144,223 @@ export default function Chat() {
   )
 }
 
-function StageIndicator({ stage, isLoading, isPolling }) {
-  const colors = {
-    idle:       'bg-slate-500',
-    initial:    'bg-indigo-500',
-    clarifying: 'bg-amber-500',
-    compiling:  'bg-violet-500 animate-pulse',
-    blueprint:  'bg-purple-500',
-    confirmed:  'bg-indigo-400',
-    generating: 'bg-violet-500 animate-pulse',
-    fixing:     'bg-rose-500 animate-pulse',
-    complete:   'bg-emerald-500',
-  }
+/* ── Stepper ─────────────────────────────────────────────── */
 
-  const showSpinner = isLoading || isPolling
-
+function Stepper({ stage, busy }) {
+  const current = stageStepIndex(stage)
   return (
-    <div className="flex items-center gap-2.5 px-3 py-1 glass-panel rounded-full border border-slate-800">
-      {showSpinner && <Spinner size="sm" />}
-      <div className={`w-2 h-2 rounded-full ${colors[stage] || 'bg-slate-500'}`} />
-      <span className="text-xs font-semibold text-slate-300">
-        {formatStage(stage)}
-      </span>
+    <div className="hidden items-center md:flex">
+      {STAGE_STEPS.map((s, i) => {
+        const done = i < current
+        const active = i === current
+        return (
+          <React.Fragment key={s.key}>
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`grid size-[18px] place-items-center rounded-full border text-[10px] font-semibold transition-colors ${
+                  done
+                    ? 'border-accent-line bg-accent-bg text-accent-hi'
+                    : active
+                    ? 'border-accent bg-accent text-white'
+                    : 'border-line bg-white/[0.02] text-ink-faint'
+                }`}
+              >
+                {done ? <Icon name="check" className="size-2.5" strokeWidth={2.4} /> : i + 1}
+              </span>
+              <span
+                className={`text-[12px] transition-colors ${
+                  active ? 'font-medium text-ink' : done ? 'text-ink-muted' : 'text-ink-faint'
+                }`}
+              >
+                {s.label}
+              </span>
+              {active && busy && <Spinner size="xs" className="ml-0.5" />}
+            </div>
+            {i < STAGE_STEPS.length - 1 && (
+              <span className={`mx-2 h-px w-5 ${i < current ? 'bg-accent-line' : 'bg-line'}`} />
+            )}
+          </React.Fragment>
+        )
+      })}
     </div>
   )
 }
 
-function ContextPanel({
-  stage, blueprint, validation, genSummary, sessionId,
-  jobId, jobStatus, progress, isGenerating, metadata
-}) {
-  const [activeTab, setActiveTab] = useState('blueprint')
+/* ── Context panel ───────────────────────────────────────── */
 
-  // These advanced views are fed by the full generation `metadata`
-  // (simulation / genome / traceability / recommendations), which is NOT
-  // part of the default API contract — it is returned only to a staff
-  // `X-Debug: true` request. When it's absent the tabs simply don't appear;
-  // a short note below explains why so the panel doesn't regress silently.
+function ContextPanel({ stage, blueprint, validation, genSummary, metadata, jobId, jobStatus, progress, isGenerating }) {
+  const [tab, setTab] = useState('blueprint')
+
   const sim = metadata?.simulation_report
   const genome = metadata?.genome
-  const trace = metadata?.traceability_graph?.tables
   const recs = metadata?.proactive_recommendations
-  const advancedHidden = stage === 'complete' && !sim && !genome && !recs
+  const tabs = [
+    { key: 'blueprint', label: 'Blueprint' },
+    sim && { key: 'simulation', label: 'Simulation' },
+    genome && { key: 'genome', label: 'DNA' },
+    recs?.length && { key: 'recs', label: 'Recs' },
+  ].filter(Boolean)
+
+  const hasAnything = blueprint || validation || genSummary || isGenerating
 
   return (
-    <div className="flex flex-col h-full bg-[#090d16]/50">
-      {/* Tab Headers */}
-      <div className="flex border-b border-slate-800/80 bg-[#060911] px-1 py-1 shrink-0 overflow-x-auto whitespace-nowrap scrollbar-none">
-        <TabButton active={activeTab === 'blueprint'} onClick={() => setActiveTab('blueprint')} label="Blueprint" />
-        {sim && <TabButton active={activeTab === 'simulation'} onClick={() => setActiveTab('simulation')} label="Simulation" />}
-        {genome && <TabButton active={activeTab === 'genome'} onClick={() => setActiveTab('genome')} label="DNA Specs" />}
-        {recs && recs.length > 0 && <TabButton active={activeTab === 'recommendations'} onClick={() => setActiveTab('recommendations')} label="Recs" />}
+    <div className="flex h-full flex-col">
+      <div className="flex shrink-0 gap-1 border-b border-line p-1.5">
+        {tabs.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
+              tab === t.key ? 'bg-white/[0.06] text-ink' : 'text-ink-dim hover:text-ink-muted'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
-        {/* Live Generation Progress */}
+      <div className="scroll-thin flex-1 space-y-3 overflow-y-auto p-3.5">
         {isGenerating && (
-          <div className="space-y-2">
-            <p className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
-              ⚡ Generation Pipeline
-            </p>
-            <div className="glass-panel rounded-2xl p-4 border border-indigo-500/20 shadow-xl shadow-indigo-900/10">
-              <GenerationProgress
-                jobStatus={jobStatus}
-                progress={progress}
-                jobId={jobId}
-              />
-            </div>
-          </div>
+          <SectionCard title="Generation" accent>
+            <GenerationProgress jobStatus={jobStatus} progress={progress} jobId={jobId} />
+          </SectionCard>
         )}
 
-        {activeTab === 'blueprint' && (
+        {tab === 'blueprint' && (
           <>
             {blueprint && (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-slate-400">Blueprint (L8 Spec)</p>
-                <div className="glass-card rounded-xl p-3.5 space-y-2 border border-slate-800">
-                  <p className="text-sm font-bold text-white">
-                    {blueprint.project_name}
-                  </p>
-                  <p className="text-xs text-slate-400 font-medium">
-                    {blueprint.modules?.length || 0} Modules Planned
-                  </p>
+              <SectionCard title="Blueprint">
+                <p className="text-[13.5px] font-medium text-ink">{blueprint.project_name}</p>
+                {blueprint.description && (
+                  <p className="mt-0.5 text-[12px] leading-relaxed text-ink-dim">{blueprint.description}</p>
+                )}
+                <div className="mt-2.5 flex gap-4 text-[12px] text-ink-muted">
+                  <span><b className="font-semibold text-ink">{blueprint.modules?.length || 0}</b> modules</span>
+                  <span>
+                    <b className="font-semibold text-ink">
+                      {blueprint.modules?.reduce((s, m) => s + (m.tables?.length || 0), 0) || 0}
+                    </b> tables
+                  </span>
                 </div>
-              </div>
+              </SectionCard>
             )}
 
             {validation && (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-slate-400">Rules Compliance</p>
-                <div className="glass-card rounded-xl p-3.5 space-y-1.5 border border-slate-800">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400 font-medium">Validation Score:</span>
-                    <span className="font-bold text-emerald-400">{validation.score} / 100</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400 font-medium">Status:</span>
-                    <span className="font-semibold text-slate-200">
-                      {validation.passed
-                        ? `Passed${validation.grade ? ` (Grade ${validation.grade})` : ''}`
-                        : 'Action Required'}
-                    </span>
+              <SectionCard title="Rules compliance">
+                <div className="flex items-center gap-3">
+                  <ScoreRing score={validation.score} />
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-ink">
+                      {validation.passed ? 'Passed' : 'Action required'}
+                      {validation.grade ? ` · Grade ${validation.grade}` : ''}
+                    </p>
+                    <p className="mt-0.5 truncate text-[11.5px] text-ink-dim">
+                      {validation.summary || 'Headline quality score'}
+                    </p>
                   </div>
                 </div>
-              </div>
+              </SectionCard>
             )}
 
             {genSummary && (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-slate-400">Generation Summary</p>
-                <div className="glass-card rounded-xl p-3.5 space-y-1.5 border border-slate-800 text-xs">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Tables generated:</span>
-                    <span className="font-semibold text-slate-200">{genSummary.tables_generated ?? '—'}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Modules:</span>
-                    <span className="font-semibold text-slate-200">
-                      {genSummary.modules_generated ?? genSummary.modules_planned ?? '—'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Completeness:</span>
-                    <span className="font-semibold text-slate-200">
-                      {genSummary.completeness_pct != null ? `${genSummary.completeness_pct}%` : '—'}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <SectionCard title="Generation summary">
+                <Row label="Tables generated" value={genSummary.tables_generated ?? '—'} />
+                <Row label="Modules" value={genSummary.modules_generated ?? genSummary.modules_planned ?? '—'} />
+                <Row
+                  label="Completeness"
+                  value={genSummary.completeness_pct != null ? `${genSummary.completeness_pct}%` : '—'}
+                />
+              </SectionCard>
             )}
 
-            {advancedHidden && (
-              <p className="text-[11px] text-slate-600 leading-relaxed">
-                Deeper architecture analysis isn’t shown in this view.
-              </p>
+            {!hasAnything && (
+              <EmptyPanel
+                icon="panel-right"
+                title="Nothing here yet"
+                body="Your blueprint, validation score, and generation summary will show up here as you go."
+              />
             )}
           </>
         )}
       </div>
 
-      {/* Guide Footnote */}
-      <div className="p-4 border-t border-slate-800/80 bg-[#060911]/80">
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-          {isGenerating ? 'Pipeline Active' : 'Workbench Guidance'}
-        </p>
+      <div className="hairline-t bg-bg p-3.5">
+        <p className="label mb-2">{isGenerating ? 'While you wait' : 'Tips'}</p>
         <TipsByStage stage={isGenerating ? 'generating' : stage} />
       </div>
     </div>
   )
 }
 
-function TabButton({ active, onClick, label }) {
+function SectionCard({ title, accent, children }) {
   return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-2 text-xs font-semibold border-b-2 transition-all ${
-        active
-          ? 'border-indigo-500 text-indigo-400 bg-slate-900/60'
-          : 'border-transparent text-slate-500 hover:text-slate-300'
-      }`}
-    >
-      {label}
-    </button>
+    <div className={`rounded-xl border p-3.5 ${accent ? 'border-accent-line bg-accent-bg' : 'border-line bg-bg-elevated'} shadow-inset-hl`}>
+      <p className="label mb-2.5">{title}</p>
+      {children}
+    </div>
+  )
+}
+
+function Row({ label, value }) {
+  return (
+    <div className="flex items-center justify-between py-0.5 text-[12.5px]">
+      <span className="text-ink-dim">{label}</span>
+      <span className="font-medium text-ink">{value}</span>
+    </div>
+  )
+}
+
+function ScoreRing({ score = 0 }) {
+  const r = 16
+  const c = 2 * Math.PI * r
+  const pct = Math.max(0, Math.min(100, score))
+  const col = pct >= 85 ? '#3ecf8e' : pct >= 70 ? '#a89bff' : pct >= 55 ? '#f5a623' : '#f56565'
+  return (
+    <div className="relative size-11 shrink-0">
+      <svg viewBox="0 0 40 40" className="size-full -rotate-90">
+        <circle cx="20" cy="20" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
+        <circle
+          cx="20" cy="20" r={r} fill="none" stroke={col} strokeWidth="3" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c - (c * pct) / 100}
+          style={{ transition: 'stroke-dashoffset .7s cubic-bezier(0.16,1,0.3,1)' }}
+        />
+      </svg>
+      <span className="absolute inset-0 grid place-items-center text-[12px] font-semibold tabular-nums text-ink">
+        {score}
+      </span>
+    </div>
+  )
+}
+
+function EmptyPanel({ icon, title, body }) {
+  return (
+    <div className="flex flex-col items-center px-4 py-10 text-center">
+      <div className="mb-3 grid size-9 place-items-center rounded-lg border border-line bg-white/[0.03] text-ink-faint">
+        <Icon name={icon} className="size-[18px]" />
+      </div>
+      <p className="text-[13px] font-medium text-ink-muted">{title}</p>
+      <p className="mt-1 text-[11.5px] leading-relaxed text-ink-faint">{body}</p>
+    </div>
   )
 }
 
 function TipsByStage({ stage }) {
   const tips = {
-    initial:    ['Specify core entities & relationship types', 'Mention GST/tax compliance requirements', 'State expected database scale'],
-    clarifying: ['Provide as much context as possible', 'Skip rules that don\'t apply', 'Type "Generate Blueprint" when ready'],
-    blueprint:  ['Review target modules and tables', 'Type YES to launch schema generator'],
-    generating: ['Multi-pass batching generates tables in isolation', 'Validation rules applied on every table'],
-    complete:   ['Download SQL DDL and PDF technical specs', 'Ask to explain individual tables'],
+    idle:       ['Pick or start a design to begin.'],
+    initial:    ['Name the core things it tracks.', 'Mention scale and any tax/GST needs.', 'Say who the users are.'],
+    clarifying: ['Answer what\'s relevant — skip the rest.', 'Say "Generate Blueprint" when ready.'],
+    compiling:  ['Mapping entities, relationships and lifecycles.', 'This usually takes ~20 seconds.'],
+    blueprint:  ['Scan the modules and tables.', 'Type YES to build the SQL, or say what to change.'],
+    generating: ['Tables are generated in small batches.', 'Every table is validated as it lands.'],
+    complete:   ['Download the SQL and the PDF.', 'Ask "explain <table>" to walk through one.'],
   }
-
-  const stageTips = tips[stage] || ['Describe your database requirements to begin']
-
+  const list = tips[stage] || tips.initial
   return (
     <ul className="space-y-1.5">
-      {stageTips.map((tip, i) => (
-        <li key={i} className="text-xs text-slate-400 flex items-start gap-1.5 leading-normal">
-          <span className="text-indigo-400 font-bold">•</span>
-          {tip}
+      {list.map((t, i) => (
+        <li key={i} className="flex gap-2 text-[12px] leading-relaxed text-ink-muted">
+          <Icon name="check" className="mt-0.5 size-3 shrink-0 text-accent-hi" strokeWidth={2.2} />
+          {t}
         </li>
       ))}
     </ul>

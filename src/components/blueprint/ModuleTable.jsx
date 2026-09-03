@@ -1,38 +1,33 @@
 // src/components/blueprint/ModuleTable.jsx
+import React, { useState } from 'react'
+import Icon from '../ui/Icon'
 
 export default function ModuleTable({ module, index }) {
+  const [open, setOpen] = useState(true)
+  const count = module.tables?.length || 0
+
   return (
     <div className="px-4 py-3">
-      {/* Module header */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className="w-5 h-5 rounded bg-blue-600/30 text-blue-400
-                         text-xs flex items-center justify-center font-bold">
+      <button onClick={() => setOpen(o => !o)} className="flex w-full items-center gap-2 text-left">
+        <span className="grid size-[18px] shrink-0 place-items-center rounded-md border border-accent-line bg-accent-bg font-mono text-[10px] text-accent-hi">
           {index}
         </span>
-        <span className="text-sm font-medium text-slate-200">
-          {module.name}
-        </span>
-        <span className="text-xs text-slate-500">
-          — {module.description}
-        </span>
-      </div>
+        <span className="text-[13px] font-medium text-ink">{module.name}</span>
+        <span className="min-w-0 flex-1 truncate text-[12px] text-ink-dim">{module.description}</span>
+        <span className="shrink-0 text-[11px] text-ink-faint">{count}</span>
+        <Icon name="chevron-down" className={`size-3.5 shrink-0 text-ink-faint transition-transform ${open ? '' : '-rotate-90'}`} />
+      </button>
 
-      {/* Tables list */}
-      <div className="ml-7 space-y-1">
-        {module.tables?.map((table, i) => (
-          <div key={i} className="flex items-start gap-2">
-            <span className="text-slate-600 text-xs mt-0.5">•</span>
-            <div>
-              <code className="text-xs text-blue-300 font-mono">
-                {table.name}
-              </code>
-              <span className="text-xs text-slate-500 ml-2">
-                {table.purpose}
-              </span>
+      {open && count > 0 && (
+        <div className="mt-2 ml-6 space-y-1 border-l border-line pl-3">
+          {module.tables.map((t, i) => (
+            <div key={i} className="flex items-baseline gap-2 text-[12px]">
+              <code className="shrink-0 font-mono text-accent-hi">{t.name}</code>
+              <span className="truncate text-ink-dim">{t.purpose}</span>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
