@@ -6,7 +6,7 @@ import Icon from '../components/ui/Icon'
 import Logo from '../components/ui/Logo'
 
 const FEATURES = [
-  { icon: 'layers',   title: '94 architecture rules', desc: 'Distilled from 23 production databases across 9 domains, applied as your schema is designed.' },
+  { icon: 'layers',   title: '98 architecture rules', desc: 'Distilled from 23 production databases across 9 domains, applied as your schema is designed.' },
   { icon: 'shield',   title: '7-dimension validator', desc: 'Naming, audit fields, indexes, money types, data preservation — scored, then auto-fixed.' },
   { icon: 'file-code',title: 'SQL + PDF, ready to run', desc: 'A clean MySQL DDL file plus documentation explaining every table and decision.' },
   { icon: 'lock',     title: 'Compliance built in', desc: 'Soft deletes, immutable transaction logs, archive mirrors, GST columns where they belong.' },
@@ -43,7 +43,7 @@ export default function Landing() {
         <section className="mx-auto max-w-3xl px-6 pt-24 pb-14 text-center">
           <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3 py-1 text-[12.5px] text-ink-muted">
             <span className="size-1.5 rounded-full bg-ok shadow-[0_0_8px_theme(colors.ok.DEFAULT)]" />
-            94 rules · 23 production schemas analysed
+            98 rules · 23 production schemas analysed
           </div>
 
           <h1 className="text-[2.6rem] font-semibold leading-[1.06] tracking-tightest sm:text-[3.4rem]">
@@ -163,7 +163,7 @@ export default function Landing() {
           <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-6 py-8 text-[12.5px] text-ink-faint sm:flex-row">
             <div className="flex items-center gap-2">
               <Logo className="size-5" />
-              <span>BaseAI Engine · 94 verified rules</span>
+              <span>BaseAI Engine · 98 verified rules</span>
             </div>
             <span>© {new Date().getFullYear()} BaseAI. Enterprise database architecture.</span>
           </div>
