@@ -4,6 +4,70 @@ import { useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button'
 import Icon from '../components/ui/Icon'
 import Logo from '../components/ui/Logo'
+import DownloadButtons from '../components/schema/DownloadButtons'
+
+// Real output from the actual product — generated end-to-end (conversation
+// -> blueprint -> batched generation -> auto-refinement -> real-MySQL
+// validation), not hand-written. Every figure below is read directly off
+// the committed schema files in public/showcase/, not asserted copy.
+const SHOWCASE = [
+  {
+    slug: 'financial-ledger',
+    icon: '🏦',
+    name: 'Financial Ledger',
+    blurb: 'Double-entry NBFC accounting core — chart of accounts, journal vouchers, GST, bank reconciliation.',
+    tables: 22,
+    score: 98,
+    grade: 'A',
+    mysql: 'clean',
+    findings: [
+      '18 foreign keys — 100% with an explicit ON DELETE/ON UPDATE action (SET NULL on optional references), never left at implicit RESTRICT.',
+      '2 Layer-3 archive tables and 3 lifecycle-transition trails on its regulated entities.',
+    ],
+  },
+  {
+    slug: 'healthcare-ehr',
+    icon: '🏥',
+    name: 'Healthcare EHR',
+    blurb: 'Clinical database for a 300-bed hospital — encounters, medication administration, lab results, access audit log.',
+    tables: 35,
+    score: 100,
+    grade: 'A',
+    mysql: 'clean',
+    findings: [
+      '59 foreign keys — 100% with an explicit action (57 RESTRICT, 2 SET NULL) matched to whether the relationship is independent or optional.',
+      '5 Layer-3 archive tables and 6 lifecycle-transition trails for patient and clinical entities.',
+    ],
+  },
+  {
+    slug: 'saas-control-plane',
+    icon: '☁️',
+    name: 'Multi-Tenant SaaS',
+    blurb: 'B2B control plane — organisations, RBAC, metered billing, webhooks, per-tenant audit log.',
+    tables: 40,
+    score: 96,
+    grade: 'A',
+    mysql: 'clean',
+    findings: [
+      '51 foreign keys — 100% with an explicit action (46 RESTRICT, 3 SET NULL, 2 CASCADE on owned child records).',
+      '5 archive tables and 10 lifecycle trails across billing and access-control entities.',
+    ],
+  },
+  {
+    slug: 'logistics-freight',
+    icon: '🚚',
+    name: 'Logistics',
+    blurb: 'National parcel carrier — shipments, hub routing, high-volume tracking events, proof of delivery, claims.',
+    tables: 35,
+    score: 100,
+    grade: 'A',
+    mysql: 'clean',
+    findings: [
+      '55 foreign keys — 100% with an explicit action (51 RESTRICT, 2 SET NULL, 2 CASCADE on owned child records).',
+      '5 archive tables and 7 lifecycle trails on its regulated shipment and claim entities.',
+    ],
+  },
+]
 
 const FEATURES = [
   { icon: 'layers',   title: '98 architecture rules', desc: 'Distilled from 23 production databases across 9 domains, applied as your schema is designed.' },
@@ -125,6 +189,24 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* ── Showcase ── */}
+        <section className="mx-auto max-w-5xl px-6 py-16">
+          <p className="label mb-2 text-center">Real output, not mockups</p>
+          <h2 className="text-center text-[1.6rem] font-semibold tracking-tight text-ink">
+            Four schemas, generated end-to-end by the actual product
+          </h2>
+          <p className="mx-auto mt-2.5 max-w-xl text-center text-[13.5px] leading-relaxed text-ink-dim">
+            Same conversation → blueprint → generation → auto-refinement → real-MySQL
+            validation pipeline you'd run. Download the exact files below.
+          </p>
+
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {SHOWCASE.map((s) => (
+              <ShowcaseCard key={s.slug} s={s} />
+            ))}
+          </div>
+        </section>
+
         {/* ── Trust strip ── */}
         <section className="mx-auto max-w-4xl px-6 py-14">
           <div className="grid grid-cols-1 divide-y divide-line rounded-2xl border border-line bg-bg-raised sm:grid-cols-3 sm:divide-x sm:divide-y-0">
@@ -174,6 +256,51 @@ export default function Landing() {
 }
 
 /* ── pieces ─────────────────────────────────────────────── */
+
+function ShowcaseCard({ s }) {
+  return (
+    <div className="rounded-2xl border border-line bg-bg-raised p-5 shadow-inset-hl transition-[border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-line-strong">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-line bg-white/[0.03] text-[16px]">
+            {s.icon}
+          </span>
+          <div>
+            <h3 className="text-[14.5px] font-medium text-ink">{s.name}</h3>
+            <p className="text-[11.5px] text-ink-faint">{s.tables} tables</p>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-ok-line bg-ok-bg px-2.5 py-0.5 text-[11px] font-medium text-ok">
+            {s.score}/100 · {s.grade}
+          </span>
+          <span className="inline-flex items-center gap-1 text-[10.5px] text-ink-faint">
+            <span className="size-1.5 rounded-full bg-ok" />
+            MySQL {s.mysql}
+          </span>
+        </div>
+      </div>
+
+      <p className="mt-3 text-[12.5px] leading-relaxed text-ink-dim">{s.blurb}</p>
+
+      <ul className="mt-3 space-y-1.5">
+        {s.findings.map((f) => (
+          <li key={f} className="flex gap-2 text-[11.5px] leading-relaxed text-ink-muted">
+            <Icon name="check" className="mt-0.5 size-3 shrink-0 text-accent-hi" />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-4">
+        <DownloadButtons
+          sqlUrl={`/showcase/${s.slug}.sql`}
+          pdfUrl={`/showcase/${s.slug}.pdf`}
+        />
+      </div>
+    </div>
+  )
+}
 
 function Nav({ navigate }) {
   return (

@@ -3,13 +3,15 @@ import React from 'react'
 import { conversationApi } from '../../api/client'
 import Icon from '../ui/Icon'
 
-export default function DownloadButtons({ sessionId }) {
-  if (!sessionId) return null
+// Either pass `sessionId` (live conversation — resolves via the download API),
+// or `sqlUrl`/`pdfUrl` directly (static files, e.g. the showcase schemas).
+export default function DownloadButtons({ sessionId, sqlUrl, pdfUrl }) {
+  const resolvedSql = sqlUrl || (sessionId ? conversationApi.downloadSql(sessionId) : null)
+  const resolvedPdf = pdfUrl || (sessionId ? conversationApi.downloadPdf(sessionId) : null)
+  if (!resolvedSql && !resolvedPdf) return null
 
   const open = type => {
-    const url = type === 'sql'
-      ? conversationApi.downloadSql(sessionId)
-      : conversationApi.downloadPdf(sessionId)
+    const url = type === 'sql' ? resolvedSql : resolvedPdf
     window.open(url, '_blank')
   }
 
